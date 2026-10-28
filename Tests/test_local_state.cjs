@@ -1,0 +1,10 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {readGlossary,modelStatus}=require('../electron/local-state.cjs');
+test('glossary read is bounded and preserves existing storage',async()=>{const p=await fs.mkdtemp(path.join(os.tmpdir(),'od-state-'));try{
+ assert.deepEqual(await readGlossary(p),[]);await fs.writeFile(path.join(p,'glossary.json'),JSON.stringify([{source:'SKU',target:'货号',id:'1'}]));assert.equal((await readGlossary(p))[0].target,'货号');
+ await fs.writeFile(path.join(p,'glossary.json'),'x'.repeat(200001));await assert.rejects(readGlossary(p),/limit/);
+}finally{await fs.rm(p,{recursive:true,force:true});}});
+test('status only issues GET and resolves each model without loading',async()=>{const seen=[];const server=http.createServer((q,r)=>{seen.push([q.method,q.url]);r.end(JSON.stringify({data:[{id:'hy-mt2-7b-q8_0',status:{value:'sleeping'}},{id:'hy-mt2-1.8b-q8_0',status:{value:'loaded'}}]}));});await new Promise(r=>server.listen(0,'127.0.0.1',r));try{
+ const port=server.address().port;assert.equal(await modelStatus('quality',{port}),'sleeping');assert.equal(await modelStatus('fast',{port}),'loaded');assert.deepEqual(seen,[['GET','/v1/models'],['GET','/v1/models']]);await assert.rejects(modelStatus('unknown',{port}));
+}finally{server.close();}});

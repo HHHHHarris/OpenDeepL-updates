@@ -1,0 +1,14 @@
+{# OpenDeepL's formatting-only adapter for Hy-MT2-7B; MIT, no model weights. #}
+{%- for item in messages -%}
+  {%- if item['role'] == 'system' and item['content'] -%}
+    {{- '<|startoftext|>' + item['content'] + '<|extra_4|>' -}}
+  {%- elif item['role'] == 'user' -%}
+    {%- if loop.index0 == 1 and messages[0]['role'] == 'system' and messages[0]['content'] -%}
+      {{- item['content'] + '<|extra_0|>' -}}
+    {%- else -%}
+      {{- '<|startoftext|>' + item['content'] + '<|extra_0|>' -}}
+    {%- endif -%}
+  {%- elif item['role'] == 'assistant' -%}
+    {{- item['content'] + '<|eos|>' -}}
+  {%- endif -%}
+{%- endfor -%}

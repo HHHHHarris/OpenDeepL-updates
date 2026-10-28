@@ -1,0 +1,29 @@
+{
+  "name": "opendeepl-desktop",
+  "version": "0.6.3",
+  "private": true,
+  "description": "Private, local-model translation for macOS and Windows",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test:core": "./scripts/test_core.sh",
+    "build:mac": "./scripts/build_desktop.sh",
+    "test": "node --test Tests/*.cjs",
+    "test:python": "python3 -m unittest discover -s Tests -p 'test_*.py' -v"
+  },
+  "devDependencies": {
+    "electron": "44.9.3"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/HHHHHarris/OpenDeepL-updates",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HHHHHarris/OpenDeepL-updates.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HHHHHarris/OpenDeepL-updates/issues"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

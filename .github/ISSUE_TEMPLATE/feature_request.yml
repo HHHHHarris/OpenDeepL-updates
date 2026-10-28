@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest an improvement for the source preview.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user workflow, not only the proposed implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Relevant platform
+      options:
+        - Both
+        - macOS
+        - Windows
+        - Unsure
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Privacy, licensing, or compatibility considerations
+      description: Note any new network request, dependency, model, permission, or update implication.

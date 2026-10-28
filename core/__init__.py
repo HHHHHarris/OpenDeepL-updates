@@ -1,0 +1,1 @@
+"""OpenDeepL offline core package."""

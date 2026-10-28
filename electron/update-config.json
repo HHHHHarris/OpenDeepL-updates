@@ -1,0 +1,7 @@
+{
+  "repository": "HHHHHarris/OpenDeepL-updates",
+  "feeds": {
+    "darwin": "https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest/download/update-darwin.json",
+    "win32": "https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest/download/update-win32.json"
+  }
+}
