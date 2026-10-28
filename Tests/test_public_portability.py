@@ -44,7 +44,7 @@ class PublicPortabilityTests(unittest.TestCase):
             'OPENDEEPL_QUALITY_MODEL': '/tmp/quality.gguf',
             'OPENDEEPL_FAST_MODEL': '/tmp/fast.gguf',
             'OPENDEEPL_CHAT_TEMPLATE': '/tmp/chat.jinja'})
-        self.assertEqual(values[1:], ['/tmp/quality.gguf', '/tmp/fast.gguf', '/tmp/chat.jinja'])
+        self.assertEqual(values[1:], [str(Path(p)) for p in ('/tmp/quality.gguf', '/tmp/fast.gguf', '/tmp/chat.jinja')])
 
     def test_synthetic_ocr_fixture_exists(self):
         path = ROOT / 'Tests/fixtures/ocr-sample.png'
