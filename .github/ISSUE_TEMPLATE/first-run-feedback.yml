@@ -10,16 +10,18 @@ body:
     id: platform
     attributes:
       label: OS / 操作系统
+      default: 2
       options:
         - macOS
         - Windows
-        - Other / 其他
+        - Other or unsure / 其他或不确定
     validations:
       required: true
   - type: dropdown
     id: architecture
     attributes:
       label: Architecture / 架构
+      default: 2
       options:
         - Apple Silicon (arm64)
         - Windows x64
@@ -42,6 +44,7 @@ body:
     id: setup
     attributes:
       label: Installation and model setup / 安装与模型配置
+      default: 1
       options:
         - Success / 成功
         - Not tested / 未测试
@@ -52,6 +55,7 @@ body:
     id: text
     attributes:
       label: Synthetic text translation (amounts, negation, units) / 合成文本翻译
+      default: 1
       options:
         - Success / 成功
         - Not tested / 未测试
@@ -62,6 +66,7 @@ body:
     id: ordinary_copy
     attributes:
       label: Ordinary single copy / 普通单次复制
+      default: 1
       options:
         - Success / 成功
         - Not tested / 未测试
@@ -72,6 +77,7 @@ body:
     id: double_copy
     attributes:
       label: Optional double-copy / 可选双复制
+      default: 1
       options:
         - Success / 成功
         - Not tested / 未测试
@@ -82,6 +88,7 @@ body:
     id: idle
     attributes:
       label: 60-second idle unload (observed status only) / 60 秒空闲卸载（仅明确观察）
+      default: 1
       options:
         - Success / 成功
         - Not tested or not observable / 未测试或未观察到
