@@ -1,71 +1,46 @@
 <p align="center"><img src="assets/AppIcon.svg" width="96" alt="OpenDeepL 图标"></p>
 <h1 align="center">OpenDeepL</h1>
-<p align="center"><strong>复制两次，本地翻译。让你的文字留在自己的设备上。</strong></p>
-<p align="center"><a href="README.md">English</a> · <a href="docs/INSTALL.md">安装与构建</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 版本</a> · <a href="docs/TRY.zh-CN.md">试用与反馈</a></p>
+<p align="center"><strong>在自己的电脑上翻译，不把文字交给云端翻译服务。</strong></p>
+<p align="center"><a href="README.md">English</a> · <a href="docs/DEMO.md">真实 App 演示</a> · <a href="docs/TRY.zh-CN.md">试用清单</a> · <a href="docs/INSTALL.md">安装与构建</a></p>
 
-OpenDeepL 是适用于 macOS 与 Windows 的独立开源桌面翻译应用。配置好模型和本地运行环境后，文本、截图和受支持文档都在本机处理，无需翻译 API Key。**本项目与 DeepL SE 没有关联。**
+OpenDeepL 是面向 **Apple Silicon Mac 和 Windows x64** 的独立开源桌面翻译应用。文本、框选截图和受支持文档使用本地模型处理，无需翻译 API Key。**本项目与 DeepL SE 无关联。**
 
-> **0.7.0 自带运行环境的社区版。**Apple Silicon Mac 与 Windows x64 安装包自带本地运行环境；模型权重在首次使用时下载或校验导入。Mac 使用固定的本地构建签名，**不是** Apple Developer ID 签名或公证；Windows 安装包未签名。详见[安装及首次打开说明](docs/INSTALL.md)与[版本说明](docs/RELEASE-0.7.0.md)。现有 `.odup` 是兼容版本的运行时更新包，不是独立安装包。
+> **0.7.1 发布候选稿，尚未发布。** v0.7.1 安装包及校验文件上传之前，请从[最新已发布版本](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)获取下载；下列 0.7.1 文件名仅供识别。验收边界见[候选版本说明](docs/RELEASE-0.7.1.md)。
 
-### 下载 0.7.0
+### 下载
 
-[**Apple Silicon Mac · DMG**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) · [**Windows x64 · 安装程序**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) · [**SHA-256 校验文件**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt)
+[**最新已发布版本**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) · 计划中的 0.7.1 文件：`OpenDeepL-0.7.1-macos-arm64.dmg`、`OpenDeepL-0.7.1-windows-x64-setup.exe`、`SHA256SUMS-0.7.1.txt`。
 
-## 看真实 App
+## 真实 App，虚构导览
 
-![OpenDeepL 0.7 在 Mac 上用本地 7B 模型将虚构英文样本翻译成中文](assets/demo/translation-macos.jpg)
+![OpenDeepL Mac App 的英文界面将虚构天文台导览翻译成法语](assets/demo/translation-macos.png)
 
-*0.7.0 App 实际截图，使用虚构文本，并非设计效果图。当前界面主要为简体中文。[模型准备、空闲卸载及演示说明](docs/DEMO.md)。*
+*最终 0.7.1 Mac 包直接截图，并非设计图。虚构导览是一次真实本地模型输出，不代表质量或速度基准。[查看技术说明、快速模式、Windows App 与空闲状态](docs/DEMO.md)。*
 
-## 三步开始
+## 能做什么
 
-1. 在 [v0.7.0 发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)下载对应安装包，并按校验文件核对 SHA-256。Mac 从 DMG 复制 App，Windows 运行安装程序。由于缺少公开发行者签名或公证，首次打开可能出现系统提示。
-2. 打开 OpenDeepL，应用会检查自带运行环境。下载默认的 7B 模型，或选择已有的相同 Q8 模型文件进行 SHA-256 校验；1.8B 为可选快速模式。
-3. 在应用内翻译文字。[安装指南](docs/INSTALL.md)包含权限、文档限制、首次打开说明和 0.6.x 升级注意事项。
+- **随手译文：** 在 App 内翻译；在系统集成可用时，也可从其他应用选中文字，用 Mac `⌘C+C` / Windows `Ctrl+C+C` 双复制翻译。单次复制保持普通复制行为。
+- **截图与文件：** 框选区域后在本地 OCR 并翻译；支持 DOCX、PPTX 和保守范围内的文字型 PDF。译文另存，重要用途需核对含义和排版。
+- **两种本地模型：** 默认 Hy-MT2-7B Q8；可选 Hy-MT2-1.8B Q8 快速模式，并可用 7B 重译。文档始终使用 7B。一次只加载一个模型，空闲 60 秒卸载权重。
+- **自主选择界面语言：** 英语和简体中文，偏好会保存。完整 0.7.1 包覆盖 App 自己的原生菜单与对话框；操作系统提供的按钮可能仍使用系统语言。
+- **本地工作区：** 术语表和最多 200 条历史记录以明文保存在设备上，不设账号或同步。
 
-## 邀请首批真实试用者
+**译文质量随内容而变。** 以往合成测试发现 1.8B 曾漏掉否定含义；7B 也不能保证正确。请核对否定、标识符、单位与关键指令。术语表只提供提示，不强制锁定；OCR 和文档版式也需复核。
 
-希望先找到 **5 位独立试用者**，不以 Star 或好评为条件。用一段虚构文本试一试，告诉我们安装、模型准备、复制或翻译在哪一步遇到了问题；安装受阻同样是有价值的反馈。
+## 开始使用
 
-[**5 分钟试用清单**](docs/TRY.zh-CN.md) · [**提交首次试用反馈**](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml)
+1. 待 v0.7.1 正式发布后，从[最新发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)下载完整安装包并核对公开的 SHA-256。运行环境随包提供；模型权重不包含在内。默认 7B 首次下载约 **8 GB**，可选 1.8B 约 **1.9 GB**；也可校验导入完全相同的已有 Q8 文件。
+2. 打开 App 完成模型准备。Mac 是固定**本地**签名，不是 Apple Developer ID 签名或公证；Windows 未签名。首次打开可能有系统提示或受到设备策略阻止。详见[安装说明](docs/INSTALL.md#first-open-notices)。
+3. 用[简短合成文本清单](docs/TRY.zh-CN.md)试用，并[提交首次反馈](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml)。约五分钟指**模型准备之后**的操作时间；下载和首次加载另计。公开 Issue 请只用虚构示例，不贴私人文档或原始日志。
 
-约 5 分钟是**模型准备完成后的操作时间**，不含下载、校验和首次加载。Issue 是公开的，请仅用合成样本，不上传私人原文、文档或原始日志。
+已有 **0.7.0** App 可通过兼容运行时更新获得网页界面的语言功能，但 App 原生菜单和对话框的英文需要安装**完整 0.7.1 包**。**0.6.x** 原生版用户也需要完整包迁移。旧更新源保留；`.odup` 不是独立安装程序。
 
-## 为什么选择 OpenDeepL？
+## 隐私、许可与范围
 
-- **少打断工作：** Mac 按 `⌘C+C`、Windows 按 `Ctrl+C+C`，翻译选中的文字。
-- **速度与质量自己选：** 1.8B 快速阅读，再按需用 7B 重译。
-- **内容留在本机：** 翻译、OCR、文档处理都在本地，无需翻译 API 密钥或订阅。
+配置完成后，推理、OCR、文档处理均在本机完成；译文和文件不会发送到云翻译 API。模型下载及可选 GitHub 更新检查仍会联网。详见[隐私说明](docs/PRIVACY.md)。
 
-## 功能概览
+原创代码采用 [MIT 许可](LICENSE)。模型权重、llama.cpp、Electron、Python 组件和字体各有第三方条款，详见[许可清单](THIRD_PARTY_NOTICES.md)。源码仓库不包含运行环境二进制文件和模型权重；平台范围及构建方法见[安装指南](docs/INSTALL.md)。
 
-| 场景 | 当前行为 |
-| --- | --- |
-| 文本 | 默认 Hy-MT2-7B Q8；可选 Hy-MT2-1.8B Q8 快速模式，再用 7B 重新翻译。术语表作为提示，不保证强制命中。 |
-| 截图 | 框选屏幕区域，使用本地 OCR 识别并翻译。 |
-| 文档 | DOCX、PPTX 和受支持的文字型 PDF，单文件或每批 1–20 份；文档使用 7B。PDF 仅覆盖常见水平文字的保守子集；扫描件及复杂版式会被拒绝。 |
-| 桌面入口 | 托盘、剪贴板翻译、双击复制捕获，以及系统允许范围内的右键菜单/选词回退。普通复制不受抑制；不同系统的集成和权限行为存在差异。 |
-| 本地工作区 | 查看翻译历史及术语表。历史最多 200 条，以明文保存在本机。 |
-| 模型运行 | 同时只加载一个模型，空闲 60 秒后卸载权重。 |
-| 更新 | 兼容的已安装 App 可检查维护者签名的运行时更新；启动约 30 秒后检查，可在设置中关闭。 |
+[更新记录](CHANGELOG.md) · [开发指南](docs/DEVELOPMENT.md) · [路线图](docs/ROADMAP.md) · [贡献](CONTRIBUTING.md) · [安全报告](SECURITY.md)
 
-快速模式不代表与 7B 相同的质量：[真实演示](docs/DEMO.md)保留了一次否定含义误译及 7B 重译过程。译文、OCR、字体和文档排版效果会随内容变化。重要用途应人工核对；文档排版不保证像素级一致。
-
-## 从源码构建
-
-1. 阅读 [INSTALL.md](docs/INSTALL.md)，了解安装包状态、首次打开、模型校验和平台构建。
-2. 使用 Node.js 22.12+，克隆仓库后执行 `npm ci`。
-3. 按指南准备对应平台的固定版本运行环境和指定模型。
-4. 用 `npm start` 运行开发界面，或构建平台产物。源码仓库不包含运行环境二进制文件或模型权重。
-
-## 隐私与许可
-
-完成配置后，推理、OCR、文档、术语表与历史均在本机处理。应用不会将原文或文件发送给云翻译 API。0.7 安装包已包含运行依赖；**模型下载**及**可选的 GitHub 更新检查**需要网络，更新请求不包含文档内容。详见 [PRIVACY.md](docs/PRIVACY.md)。
-
-本项目的原创代码采用 [MIT 许可](LICENSE)。模型权重、llama.cpp、Electron、Python 包等各有独立许可；0.7 的 PDF 运行时采用 pypdf、PDFium 与 ReportLab，并保留字体及依赖许可；PyMuPDF 仅用于开发测试，不打入应用包。分发前请查看 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和各上游条款。
-
-## 参与项目
-
-[开发指南](docs/DEVELOPMENT.md) · [路线图](docs/ROADMAP.md) · [更新记录](CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [安全报告](SECURITY.md)
-
-继续保留 `HHHHHarris/OpenDeepL-updates` 仓库地址，是为了兼容现有客户端的更新源；旧名称不代表本次公开源码的范围。请勿在 Issue 或 PR 中上传用户内容、模型权重、签名密钥或私人开发记录。
+保留 `HHHHHarris/OpenDeepL-updates` 地址是为了兼容已安装客户端的更新源；历史名称不表示与 DeepL 有关联。

@@ -2,31 +2,29 @@
 
 ## Release status
 
-**OpenDeepL 0.7.0** is a self-contained community release for macOS Apple Silicon and Windows x64. Mac packages have a fixed local build signature, but no Apple Developer ID signature or notarization; Windows packages are unsigned. Physical-machine, isolated-data candidate checks have passed; the release hashes are linked below. See [0.7.0 release notes](RELEASE-0.7.0.md). Existing `.odup` assets update a compatible installed application; they are not standalone installers.
+**0.7.1 is a release candidate, not yet published.** Full packages for Apple Silicon macOS and Windows x64 have been built and locally tested. Use the [latest published release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) until the new installers and checksums are uploaded. The Mac build has a fixed local signature, **not** Apple Developer ID signing or notarization; Windows is unsigned. See [0.7.1 candidate notes](RELEASE-0.7.1.md). Existing `.odup` assets are compatible-app runtime updates, not standalone installers.
 
-| Download ([v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)) | File |
+| Planned 0.7.1 asset (not yet uploaded) | Local candidate filename |
 | --- | --- |
-| [Apple Silicon Mac DMG](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) | `OpenDeepL-0.7.0-macos-arm64.dmg` |
-| [Windows x64 installer](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) | `OpenDeepL-0.7.0-windows-x64-setup.exe` |
-| [SHA-256 checksums](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt) | `SHA256SUMS-0.7.0.txt` |
+| Apple Silicon Mac DMG | `OpenDeepL-0.7.1-macos-arm64.dmg` |
+| Windows x64 installer | `OpenDeepL-0.7.1-windows-x64-setup.exe` |
+| SHA-256 checksums | `SHA256SUMS-0.7.1.txt` |
 
-**Consumer quick start:** 1. Download your package and verify its SHA-256 against the checksum file. 2. Copy the Mac App from the DMG or run the Windows installer, then open OpenDeepL. 3. Download the default 7B model or verify/import the exact existing Q8 file; optionally add 1.8B fast mode. Read the first-open notes below before installing on a managed device.
-
-The interface is currently primarily Chinese. Intel Macs, Windows ARM and Linux are not advertised as accepted targets.
+**Once published:** download the full package and verify its published SHA-256; copy the Mac app from the DMG or run the Windows installer; then download or verify/import the default 7B model. The optional 1.8B model enables fast mode. The runtime is bundled but model weights are not. The 0.7.1 app lets you choose English or Simplified Chinese in Settings, and saves the preference. App-owned native menus and dialogs follow this choice; OS-provided buttons may use the OS language. Intel Mac, Windows ARM and Linux are not advertised as accepted package targets.
 
 ### First-open notices
 
 Because these packages lack public publisher signing/notarization, macOS Gatekeeper or Windows Defender SmartScreen may display a first-open warning. Verify that the download came from the linked Releases page and matches its published SHA-256 digest before making your own decision about opening it. [Apple's guidance](https://support.apple.com/102445) explains the Mac alerts; [Microsoft's guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation) explains SmartScreen reputation for unsigned downloads. Managed-device policy may prevent opening the app, and Windows Smart App Control may block unsigned executables. The installer cannot promise to work under those policies. Do not turn off device protections or remove download quarantine as an installation step.
 
-If you have a 0.6.x native installation, install the **full 0.7 package once** rather than applying a 0.7 runtime update to the old base. The 0.7 update feeds use separate filenames; legacy 0.6 feeds remain intact. Keep your model files and local data. Re-check feature-specific OS permissions after replacement if prompted.
+If you have a 0.6.x native installation, install the **full 0.7.1 package** rather than applying a runtime update to the old base. An existing 0.7.0 app can receive compatible web-UI language changes through a runtime update, but English in app-owned native menus and dialogs requires the full 0.7.1 package. Version-specific 0.7 feeds and legacy 0.6 feeds remain separate and available. Keep your model files and local data. Re-check feature-specific OS permissions after replacement if prompted.
 
-## First-run flow for the 0.7 application
+## First-run flow for the 0.7.1 application
 
 1. Install the complete application, then open **OpenDeepL** directly.
 2. The built-in setup screen checks its bundled Python, PDF and inference components. No system Python, Homebrew, pip or API key is required.
 3. Download the recommended **7B standard model** (about 8 GB). Add **1.8B fast mode** (about 1.9 GB) if wanted. Downloads use Tencent's official Hugging Face repositories, can resume, and must pass SHA-256 verification.
-4. Already have the exact Q8 files? Choose **选择已有模型**. OpenDeepL verifies and references the existing file without making another multi-gigabyte copy. Keep that file at its original location.
-5. Return to translation. The default remains 7B. Fast results offer **用 7B 重译**. One model is loaded at a time; weights unload after 60 seconds idle.
+4. Already have the exact Q8 files? Choose **Choose existing model / 选择已有模型**. OpenDeepL verifies and references the existing file without making another multi-gigabyte copy. Keep that file at its original location.
+5. Return to translation. The default remains 7B. Fast results offer **Retranslate with 7B / 用 7B 重译**. One model is loaded at a time; weights unload after 60 seconds idle.
 
 Model download requires internet access; importing an already verified model does not. Text, screenshots, documents and inference are processed locally; model and application downloads do not upload translation content. Optional system integrations request only their relevant OS permissions when enabled. A build signature does not grant those permissions on the user's behalf.
 
@@ -78,4 +76,4 @@ DOCX and PPTX preserve package parts outside the translated XML text. PDF transl
 - **Existing model moved:** reopen the model panel and choose its new location.
 - **Missing application components:** reinstall the full package, not an `.odup` file.
 - **System permission prompt:** use the app's feature-specific guide. An OS security block is distinct from a feature permission; review the first-open notes above.
-- **Signed-runtime update:** 0.7 uses a version-specific update feed. The existing 0.6 update feed remains separate.
+- **Signed-runtime update:** 0.7.1 uses a version-specific update feed. The existing 0.6 update feed remains separate.

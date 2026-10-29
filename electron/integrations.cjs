@@ -8,8 +8,10 @@ const {pixelRect}=require('./capture-geometry.cjs');
 const {CaptureTasks}=require('./capture-tasks.cjs');
 const {DoubleCopy,readTranslationClipboard}=require('./double-copy.cjs');
 const {PermissionCoordinator}=require('./permissions.cjs');
+const {createInterfaceLocale}=require('./interface-locale.cjs');
 
-function createIntegrations({root,python,getWindow,ocr}) {
+function createIntegrations({root,python,getWindow,ocr,getLocale=()=> 'zh-CN'}) {
+  const captureText=key=>createInterfaceLocale({directory:app.getPath('userData'),system:getLocale()}).t(key);
   let capture=null,selectionBusy=false,permissionCoordinator,requested=false,refreshTimer;
   let transition=Promise.resolve();
   const permissionChildren=new Set();
@@ -75,11 +77,11 @@ function createIntegrations({root,python,getWindow,ocr}) {
     const child=spawn(python(),[path.join(root,'platform',file)],{cwd:root,stdio:['ignore','pipe','pipe'],shell:false,windowsHide:true,env:{...process.env,PYTHONIOENCODING:'utf-8'}});
     let out='',size=0,settled=false;
     const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);error?reject(error):resolve(value);};
-    const timer=setTimeout(()=>{child.kill();finish(new Error('读取选词超时，请重试。'));},12000);
-    child.stdout.setEncoding('utf8');child.stdout.on('data',chunk=>{out+=chunk;if(out.length>1_000_000){child.kill();finish(new Error('选中文字超过本地限制。'));}});
+    const timer=setTimeout(()=>{child.kill();finish(new Error(captureText('selectionTimeout')));},12000);
+    child.stdout.setEncoding('utf8');child.stdout.on('data',chunk=>{out+=chunk;if(out.length>1_000_000){child.kill();finish(new Error(captureText('selectionLimit')));}});
     child.stderr.on('data',chunk=>{size+=chunk.length;if(size>100000)child.kill();});
-    child.on('error',()=>finish(new Error('选词组件尚未就绪。')));
-    child.on('close',code=>{try{const value=JSON.parse(out);if(code!==0)throw new Error(value.message||'请在其他应用选中文字后重试。');if(typeof value.text!=='string'||value.text.length>100000||!value.text.trim())throw new Error('请先在其他应用选中文字。');finish(null,{text:value.text,source:'selection'});}catch(error){finish(error);}});
+    child.on('error',()=>finish(new Error(captureText('selectionUnavailable'))));
+    child.on('close',code=>{try{const value=JSON.parse(out);if(code!==0)throw new Error(value.message||captureText('selectionRetry'));if(typeof value.text!=='string'||value.text.length>100000||!value.text.trim())throw new Error(captureText('selectionEmpty'));finish(null,{text:value.text,source:'selection'});}catch(error){finish(error);}});
   });}
   // Explicit clipboard shortcut remains a backup, without AX/UIA text scraping.
   async function selection(){return translateClipboard();}
@@ -99,7 +101,7 @@ function createIntegrations({root,python,getWindow,ocr}) {
       const displays=screen.getAllDisplays();
       const sources=await desktopCapturer.getSources({types:['screen'],thumbnailSize:{width:Math.max(...displays.map(d=>Math.ceil(d.size.width*d.scaleFactor))),height:Math.max(...displays.map(d=>Math.ceil(d.size.height*d.scaleFactor)))},fetchWindowIcons:false});
       if(tasks.closed)return null;
-      if(!sources.length)throw new Error('没有可用的屏幕图像。请核对屏幕录制权限。');
+      if(!sources.length)throw new Error(captureText('captureUnavailable'));
       const rectImage=await new Promise(async(resolve,reject)=>{
         capture={windows:new Map(),resolve,reject,timer:setTimeout(()=>closeCapture(null),120000)};
         try{
@@ -114,17 +116,17 @@ function createIntegrations({root,python,getWindow,ocr}) {
             win.on('closed',()=>{if(capture)closeCapture(null);});
             await win.loadFile(path.join(root,'ui/capture.html'));if(!tasks.closed&&!win.isDestroyed())win.show();
           }
-          if(capture&&!capture.windows.size)closeCapture(null,new Error('截图为空。请核对屏幕录制权限。'));
+          if(capture&&!capture.windows.size)closeCapture(null,new Error(captureText('captureEmpty')));
         }catch(error){closeCapture(null,error);}
       });
       if(!rectImage||tasks.closed)return null;
       const directory=await fs.mkdtemp(path.join(os.tmpdir(),'OpenDeepL-capture-'));
-      try{if(tasks.closed)return null;const file=path.join(directory,'region.png');await fs.writeFile(file,rectImage.toPNG(),{mode:0o600});if(tasks.closed)return null;const result=await ocr(file);if(tasks.closed)return null;if(!result.text.trim())throw new Error('框选区域未识别到文字，请重新框选。');return {text:result.text,source:'screenshot'};}
+      try{if(tasks.closed)return null;const file=path.join(directory,'region.png');await fs.writeFile(file,rectImage.toPNG(),{mode:0o600});if(tasks.closed)return null;const result=await ocr(file);if(tasks.closed)return null;if(!result.text.trim())throw new Error(captureText('captureNoText'));return {text:result.text,source:'screenshot'};}
       finally{await fs.rm(directory,{recursive:true,force:true});}
     }finally{if(capture)closeCapture(null);else show();}
   }
   const overlay=(event)=>capture?.windows.get(event.sender.id);
-  ipcMain.handle('opendeepl:captureImage',event=>{const entry=overlay(event);if(!entry)throw new Error('Capture expired.');return {image:entry.image.toDataURL()};});
+  ipcMain.handle('opendeepl:captureImage',event=>{const entry=overlay(event);if(!entry)throw new Error('Capture expired.');return {image:entry.image.toDataURL(),locale:getLocale()};});
   ipcMain.handle('opendeepl:captureRect',(event,rect)=>{const entry=overlay(event);if(!entry)throw new Error('Capture expired.');const pixels=pixelRect(rect,entry.viewport,entry.image.getSize());const image=entry.image.crop(pixels);closeCapture(image);return true;});
   ipcMain.handle('opendeepl:captureCancel',event=>{if(overlay(event))closeCapture(null);return true;});
   return {isBusy:()=>!!(tasks.size||selectionBusy),selection,screenshot,translateClipboard,deliver,setDoubleCopyEnabled,recheckPermissions,

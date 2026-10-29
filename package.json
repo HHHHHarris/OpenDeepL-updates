@@ -1,6 +1,6 @@
 {
   "name": "opendeepl-desktop",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Private, local-model translation for macOS and Windows",
   "main": "electron/main.cjs",

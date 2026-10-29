@@ -48,3 +48,11 @@
 .update-settings .quiet-button{margin:8px 8px 0 0}
 .update-auto{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.6;margin:16px 0}
 .update-auto input{margin-top:4px;flex:none}
+/* Interface copy can expand without changing translation controls or payload values. */
+.locale-setting label{display:block;font-weight:600;margin-bottom:6px}
+.locale-setting select{width:100%;max-width:100%;font-size:13px;font-weight:500;text-align:left;background:#2b2d31;border:1px solid #686a70;border-radius:6px}
+.appbar .app-actions,.appbar nav,.engine-state,.translate-controls{min-width:0}
+.appbar .toolbar-button,.appbar .tab,.engine-state>span,.translate-controls>button{white-space:nowrap}
+.languagebar .language,.languagebar .language select{min-width:0}
+@media(max-width:1050px){body[data-locale=en] .appbar{gap:5px;padding-right:10px}body[data-locale=en] .appbar .tab{gap:5px;padding-left:6px;padding-right:6px}body[data-locale=en] .languagebar{grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr) auto}body[data-locale=en] .language select{font-size:14px;padding-inline:4px}body[data-locale=en] .engine-state select{font-size:11px;padding-inline:2px}}
+@media(max-width:920px){body[data-locale=en] .appbar .app-actions{gap:2px}body[data-locale=en] .appbar .toolbar-button{padding-inline:6px}body[data-locale=en] .languagebar{grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr)}body[data-locale=en] .languagebar #glossaryButton{display:none}}

@@ -17,6 +17,7 @@ const {createRuntimeUpdateManager}=require('./runtime-updates.cjs');
 const {createUpdateChannel}=require('./update-channel.cjs');
 const updateConfig=require('./update-config.json');
 const {planBatch}=require('./document-batch.cjs');
+const {createInterfaceLocale}=require('./interface-locale.cjs');
 const cores=new CoreRegistry();
 const {readGlossary,modelStatus,dataDirectory,engineStatus}=require('./local-state.cjs');
 const {createSetupManager}=require('./setup-manager.cjs');
@@ -32,13 +33,20 @@ const documentInputs = new Map(), completedDocuments = new Map();
 let runtimeGeneration=crypto.randomUUID();
 let onlineChannel,onlineResult=null,onlineBusy=false,autoUpdateCheck=true,onlineTimer;
 let mainWindow, integrations, tray, runtimeUpdates, runtimeRoots, stagedUpdate, updateDraft=null, updateSwitching=false, updateTimer=null;
+let interfaceLocale, acceptanceCaptureTimer, trayShow;
 const testMode = process.argv.some(arg=>['--visual-test','--smoke-test','--acceptance-test'].includes(arg));
 const visualTest = process.argv.includes('--visual-test');
 if(process.argv.includes('--acceptance-test')){
   const option=process.argv.find(arg=>arg.startsWith('--acceptance-root='));
   if(option){const root=option.slice('--acceptance-root='.length);if(!path.isAbsolute(root))throw new Error('Acceptance root must be absolute');process.env.OPENDEEPL_DATA_DIR=path.join(root,'data');process.env.OPENDEEPL_TEST_DATA=path.join(root,'ui');process.env.OPENDEEPL_ENGINE_PORT='18084';}
+  const portOption=process.argv.find(arg=>arg.startsWith('--acceptance-port='));
+  if(portOption){const value=portOption.slice('--acceptance-port='.length);const port=Number(value);if(!/^\d+$/.test(value)||!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid acceptance port');process.env.OPENDEEPL_ENGINE_PORT=String(port);}
 }
 if (testMode) app.setPath('userData', process.env.OPENDEEPL_TEST_DATA || path.join(os.tmpdir(), `OpenDeepL-test-${process.pid}`));
+const captureArg=process.argv.find(arg=>arg.startsWith('--acceptance-capture-dir='));
+const acceptanceCaptureDir=testMode&&captureArg?captureArg.slice('--acceptance-capture-dir='.length):null;
+if(acceptanceCaptureDir!==null&&(!path.isAbsolute(acceptanceCaptureDir)||!acceptanceCaptureDir.trim()))throw new Error('Invalid acceptance capture directory.');
+function nativeText(key,values){return interfaceLocale?.t(key,values)||createInterfaceLocale({directory:app.getPath('userData'),system:app.getLocale()}).t(key,values);}
 
 app.commandLine.appendSwitch('disable-background-networking');
 app.commandLine.appendSwitch('disable-component-update');
@@ -59,9 +67,9 @@ async function assertConfigured(mode='quality'){
   if(!setupManager||(!app.isPackaged&&!process.env.OPENDEEPL_RUNTIME_DIR))return;
   await setupInitialization;
   const state=await setupManager.status();
-  if(!state.runtime.ready)throw new Error('请点击顶栏「模型」完成本地运行环境配置。');
+  if(!state.runtime.ready)throw new Error(nativeText('runtimeSetup'));
   const model=state.models[mode];
-  if(!model||!model.present||model.bytes!==model.requiredBytes)throw new Error('请点击顶栏「模型」下载或导入 '+(mode==='fast'?'1.8B':'7B')+' 模型。');
+  if(!model||!model.present||model.bytes!==model.requiredBytes)throw new Error(nativeText('modelSetup',{mode:mode==='fast'?'1.8B':'7B'}));
 }
 function pythonCommand() {
   if(process.env.OPENDEEPL_PYTHON)return path.resolve(process.env.OPENDEEPL_PYTHON);
@@ -152,7 +160,7 @@ function startCore(payload, onEvent, timeoutMs = 20000) {
   child.on('close', (code,signal) => {
     clearTimeout(timer);
     ended = true;
-    try{cleanupTemporary(child.documentTemporary);}catch{onEvent(err('文档临时文件清理未完成。'));}
+    try{cleanupTemporary(child.documentTemporary);}catch{onEvent(err(nativeText('temporaryCleanup')));}
     if (!terminalEvent) fail(coreExitDiagnostic(code,signal,stderrBytes));
   });
   child.stdin.on('error', () => {});
@@ -179,9 +187,9 @@ async function checkOnlineUpdate(){
   try{onlineResult=await onlineChannel.check({currentVersion:runtimeUpdates.currentVersion()});return updateSnapshot();}
   finally{onlineBusy=false;}
 }
-function assertUpdateIdle(){if(active.size||cores.size||updateSwitching||integrations?.isBusy?.())throw new Error('请先完成或停止翻译和截图，再应用更新。');}
+function assertUpdateIdle(){if(active.size||cores.size||updateSwitching||integrations?.isBusy?.())throw new Error(nativeText('updateIdle'));}
 function checkedUpdateDraft(raw){
-  if(!raw||JSON.stringify(raw).length>1200000)throw new Error('更新草稿超出限制。');
+  if(!raw||JSON.stringify(raw).length>1200000)throw new Error(nativeText('updateDraftLimit'));
   const checked=validateDraft(raw);
   checked.modelMode=['fast','quality'].includes(raw.modelMode)?raw.modelMode:'quality';
   checked.lastResultModel=['fast','quality'].includes(raw.lastResultModel)?raw.lastResultModel:null;
@@ -200,18 +208,19 @@ async function recoverUpdate(){
   await loadRuntimeUI();
 }
 async function switchUpdate(draft,rollback=false){
-  assertUpdateIdle();if(!rollback&&!stagedUpdate)throw new Error('请先导入签名更新包。');
+  assertUpdateIdle();if(!rollback&&!stagedUpdate)throw new Error(nativeText('importSignedUpdate'));
   updateDraft=checkedUpdateDraft(draft);updateSwitching=true;let switched=false;
   try{
     if(rollback)runtimeUpdates.rollback({tentative:true});else runtimeUpdates.activate(stagedUpdate.packageId);switched=true;
     runtimeRoots=runtimeUpdates.activeRoots();
     const health=await coreOnce('health',{},'ok');
-    if(health.protocolVersion!==1||!['quality','fast'].every(mode=>health.modelModes?.includes(mode)))throw new Error('更新核心健康检查未通过。');
+    if(health.protocolVersion!==1||!['quality','fast'].every(mode=>health.modelModes?.includes(mode)))throw new Error(nativeText('updateHealth'));
     updateTimer=setTimeout(()=>recoverUpdate().catch(()=>{}),15000);
     await loadRuntimeUI();stagedUpdate=null;return true;
   }catch(error){if(switched)await recoverUpdate();else{updateSwitching=false;updateDraft=null;}throw error;}
 }
 function registerIPC() {
+  handleMain('opendeepl:setInterfaceLocale',async(_event,locale)=>interfaceLocale.set(locale));
   handleMain('opendeepl:setupStatus',()=>setupManager.status());
   handleMain('opendeepl:setupInitialize',async()=>{setupInitialization=setupManager.initialize();return setupInitialization;});
   handleMain('opendeepl:setupDownload',async(_event,mode)=>{
@@ -220,7 +229,7 @@ function registerIPC() {
   });
   handleMain('opendeepl:setupImport',async(_event,mode)=>{
     if(!['quality','fast'].includes(mode))throw new Error('INVALID_MODE');
-    const result=await dialog.showOpenDialog(mainWindow,{title:'选择已下载的模型',defaultPath:setupManager.paths().models,properties:['openFile'],filters:[{name:'GGUF model',extensions:['gguf']}]});
+    const result=await dialog.showOpenDialog(mainWindow,{title:nativeText('selectModel'),defaultPath:setupManager.paths().models,properties:['openFile'],filters:[{name:nativeText('ggufModel'),extensions:['gguf']}]});
     if(result.canceled||!result.filePaths.length)return null;
     await setupInitialization;return setupManager.importModel(mode,result.filePaths[0]);
   });
@@ -229,7 +238,7 @@ function registerIPC() {
 
   handleMain('opendeepl:translate', async (_event, request) => {
     await assertConfigured(request?.modelMode||'quality');
-    if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
+    if(active.size||updateSwitching)throw new Error(nativeText('currentTranslation'));
     const checked = validateRequest(request);
     const id = crypto.randomUUID();
     let finished = false;
@@ -260,26 +269,26 @@ function registerIPC() {
   });
   handleMain('opendeepl:copy', async (_event, text) => { await clipboard.writeText(cleanString(text)); return true; });
   handleMain('opendeepl:importText', async () => {
-    const selected = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: 'Text', extensions: ['txt', 'md', 'srt', 'csv'] }] });
+    const selected = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: nativeText('textFilter'), extensions: ['txt', 'md', 'srt', 'csv'] }] });
     if (selected.canceled || !selected.filePaths.length) return null;
     const file = selected.filePaths[0];
-    if (!['.txt', '.md', '.srt', '.csv'].includes(path.extname(file).toLowerCase())) throw new Error('Unsupported text format.');
-    if ((await fs.stat(file)).size > MAX_FILE) throw new Error('Text file exceeds local limit.');
+    if (!['.txt', '.md', '.srt', '.csv'].includes(path.extname(file).toLowerCase())) throw new Error(nativeText('unsupportedText'));
+    if ((await fs.stat(file)).size > MAX_FILE) throw new Error(nativeText('textLimit'));
     return { name: path.basename(file), text: await fs.readFile(file, 'utf8') };
   });
   handleMain('opendeepl:exportText', async (_event, text) => {
     const checked = cleanString(text);
-    const selected = await dialog.showSaveDialog(mainWindow, { defaultPath: 'translation.txt', filters: [{ name: 'Text', extensions: ['txt'] }] });
+    const selected = await dialog.showSaveDialog(mainWindow, { defaultPath: 'translation.txt', filters: [{ name: nativeText('textFilter'), extensions: ['txt'] }] });
     if (selected.canceled || !selected.filePath) return false;
     await fs.writeFile(selected.filePath, checked, { encoding: 'utf8', flag: 'w' });
     return true;
   });
   handleMain('opendeepl:ocrFile', async () => {
-    const selected = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }] });
+    const selected = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: nativeText('imagesFilter'), extensions: ['png', 'jpg', 'jpeg'] }] });
     if (selected.canceled || !selected.filePaths.length) return null;
     const file = selected.filePaths[0];
-    if (!['.png', '.jpg', '.jpeg'].includes(path.extname(file).toLowerCase())) throw new Error('Unsupported image format.');
-    if ((await fs.stat(file)).size > 25_000_000) throw new Error('Image file exceeds local limit.');
+    if (!['.png', '.jpg', '.jpeg'].includes(path.extname(file).toLowerCase())) throw new Error(nativeText('unsupportedImage'));
+    if ((await fs.stat(file)).size > 25_000_000) throw new Error(nativeText('imageLimit'));
     return runOCR(file);
   });
   handleMain('opendeepl:integrationStatus',()=>integrations.recheckPermissions());
@@ -301,31 +310,31 @@ function registerIPC() {
     return draft;
   });
   handleMain('opendeepl:restartForPermissions',async(_event,draft)=>{
-    if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译，再重新启动。');
+    if(active.size||updateSwitching)throw new Error(nativeText('restartTranslation'));
     const checked=await integrations.recheckPermissions();
-    if(!Object.values(checked.permissions||{}).some(value=>value.state==='restart-required'))throw new Error('当前权限状态无需重新启动。');
+    if(!Object.values(checked.permissions||{}).some(value=>value.state==='restart-required'))throw new Error(nativeText('noRestart'));
     await saveDraft(app.getPath('userData'),draft,{documentInput:documentInputs.values().next().value,documentInputs:[...documentInputs.values()]});
     app.relaunch();app.isQuitting=true;app.quit();return true;
   });
   handleMain('opendeepl:captureScreen',()=>integrations.screenshot());
   handleMain('opendeepl:chooseDocument',async()=>{
-    const selected=await dialog.showOpenDialog(mainWindow,{properties:['openFile'],filters:[{name:'Documents',extensions:['docx','pptx','pdf']}]});
+    const selected=await dialog.showOpenDialog(mainWindow,{properties:['openFile'],filters:[{name:nativeText('documentsFilter'),extensions:['docx','pptx','pdf']}]});
     if(selected.canceled||!selected.filePaths.length)return null;
     const file=selected.filePaths[0],extension=path.extname(file).toLowerCase();
-    if(!['.docx','.pptx','.pdf'].includes(extension))throw new Error('请选择 DOCX、PPTX 或 PDF 文件。');
-    const size=(await fs.stat(file)).size;if(size>100_000_000)throw new Error('文档超过100MB，请拆分后处理。');
+    if(!['.docx','.pptx','.pdf'].includes(extension))throw new Error(nativeText('selectDocument'));
+    const size=(await fs.stat(file)).size;if(size>100_000_000)throw new Error(nativeText('documentTooLarge'));
     const token=crypto.randomUUID();documentInputs.clear();documentInputs.set(token,{file,extension});return {token,name:path.basename(file),extension,size};
   });
   handleMain('opendeepl:chooseDocuments',async()=>{
-    if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译，再选择文档。');
-    const selected=await dialog.showOpenDialog(mainWindow,{properties:['openFile','multiSelections'],filters:[{name:'Documents',extensions:['docx','pptx','pdf']}]});
+    if(active.size||updateSwitching)throw new Error(nativeText('chooseDocumentsIdle'));
+    const selected=await dialog.showOpenDialog(mainWindow,{properties:['openFile','multiSelections'],filters:[{name:nativeText('documentsFilter'),extensions:['docx','pptx','pdf']}]});
     if(selected.canceled||!selected.filePaths.length)return null;
-    if(selected.filePaths.length>20)throw new Error('每批请选择1至20份文档。');
+    if(selected.filePaths.length>20)throw new Error(nativeText('documentCount'));
     const chosen=[];
     for(const file of selected.filePaths){
       const extension=path.extname(file).toLowerCase();
-      if(!['.docx','.pptx','.pdf'].includes(extension))throw new Error('请选择 DOCX、PPTX 或 PDF 文件。');
-      const stat=await fs.stat(file);if(!stat.isFile()||stat.size>100_000_000)throw new Error('请选择100MB以内的文档。');
+      if(!['.docx','.pptx','.pdf'].includes(extension))throw new Error(nativeText('selectDocument'));
+      const stat=await fs.stat(file);if(!stat.isFile()||stat.size>100_000_000)throw new Error(nativeText('documentUnderLimit'));
       chosen.push({token:crypto.randomUUID(),file,extension,size:stat.size});
     }
     documentInputs.clear();for(const item of chosen)documentInputs.set(item.token,{file:item.file,extension:item.extension});
@@ -333,11 +342,11 @@ function registerIPC() {
   });
   handleMain('opendeepl:translateDocuments',async(_event,tokens,options)=>{
     await assertConfigured('quality');
-    if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
-    if(!Array.isArray(tokens)||tokens.length<1||tokens.length>20||new Set(tokens).size!==tokens.length)throw new Error('每批请选择1至20份文档。');
-    const inputs=tokens.map(token=>{const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error('文档选择已失效，请重新选择。');return input;});
+    if(active.size||updateSwitching)throw new Error(nativeText('currentTranslation'));
+    if(!Array.isArray(tokens)||tokens.length<1||tokens.length>20||new Set(tokens).size!==tokens.length)throw new Error(nativeText('documentCount'));
+    const inputs=tokens.map(token=>{const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error(nativeText('documentExpired'));return input;});
     const checked=validateRequest({text:'document',...options});delete checked.text;
-    const selected=await dialog.showOpenDialog(mainWindow,{title:'选择译文保存文件夹',properties:['openDirectory','createDirectory'],defaultPath:path.dirname(inputs[0].file)});
+    const selected=await dialog.showOpenDialog(mainWindow,{title:nativeText('selectOutputFolder'),properties:['openDirectory','createDirectory'],defaultPath:path.dirname(inputs[0].file)});
     if(selected.canceled||!selected.filePaths.length)return null;
     const jobs=planBatch(inputs,selected.filePaths[0]);const id=crypto.randomUUID();const temporary=temporaryFor(jobs[0].output,id);
     let finished=false;
@@ -358,13 +367,13 @@ function registerIPC() {
   });
   handleMain('opendeepl:translateDocument',async(_event,token,options)=>{
     await assertConfigured('quality');
-    const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error('请重新选择文档。');
-    if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
+    const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error(nativeText('reselectDocument'));
+    if(active.size||updateSwitching)throw new Error(nativeText('currentTranslation'));
     const checked=validateRequest({text:'document',...options});delete checked.text;
-    const selected=await dialog.showSaveDialog(mainWindow,{defaultPath:input.file.slice(0,-input.extension.length)+'.translated'+input.extension,filters:[{name:'Translated document',extensions:[input.extension.slice(1)]}]});
+    const selected=await dialog.showSaveDialog(mainWindow,{defaultPath:input.file.slice(0,-input.extension.length)+'.translated'+input.extension,filters:[{name:nativeText('translatedDocument'),extensions:[input.extension.slice(1)]}]});
     if(selected.canceled||!selected.filePath)return null;
     const output=selected.filePath;
-    if(path.resolve(output)===path.resolve(input.file)||path.extname(output).toLowerCase()!==input.extension)throw new Error('请使用不同文件名，并保留原扩展名。');
+    if(path.resolve(output)===path.resolve(input.file)||path.extname(output).toLowerCase()!==input.extension)throw new Error(nativeText('differentOutput'));
     const id=crypto.randomUUID();let finished=false;const temporary=temporaryFor(output,id);
     const child=startCore({id,action:'translateDocument',input:input.file,output,temporary,request:checked},event=>{
       if(finished||active.get(id)!==child)return;
@@ -374,7 +383,7 @@ function registerIPC() {
     },3600000);child.documentTemporary=temporary;active.set(id,child);return id;
   });
   handleMain('opendeepl:revealDocument',(_event,id)=>{const file=completedDocuments.get(cleanString(id,100));if(file)shell.showItemInFolder(file);return !!file;});
-  handleMain('opendeepl:appInfo', () => ({ platform: process.platform, version: runtimeRoots?.version||app.getVersion(), appVersion:app.getVersion(), runtimeGeneration, offline: true }));
+  handleMain('opendeepl:appInfo', () => ({ platform: process.platform, version: runtimeRoots?.version||app.getVersion(), appVersion:app.getVersion(), runtimeGeneration, interfaceLocale:interfaceLocale.get(), offline: true }));
   handleMain('opendeepl:updateStatus',()=>updateSnapshot());
   handleMain('opendeepl:checkUpdates',()=>checkOnlineUpdate());
   handleMain('opendeepl:setAutoUpdateCheck',async(_event,value)=>{
@@ -383,14 +392,14 @@ function registerIPC() {
     const tmp=file+'.'+crypto.randomUUID();await fs.writeFile(tmp,JSON.stringify({autoCheck:value}),{mode:0o600});await fs.rename(tmp,file);return updateSnapshot();
   });
   handleMain('opendeepl:downloadUpdate',async()=>{
-    if(onlineBusy)throw new Error('更新请求正在进行，请稍候。');
-    if(onlineResult?.status!=='available')throw new Error('请先检查新版本。');onlineBusy=true;
+    if(onlineBusy)throw new Error(nativeText('updateBusy'));
+    if(onlineResult?.status!=='available')throw new Error(nativeText('checkUpdateFirst'));onlineBusy=true;
     try{const downloaded=await onlineChannel.download(onlineResult.update,{currentVersion:runtimeUpdates.currentVersion()});
       stagedUpdate=runtimeUpdates.importPackage(downloaded.file);return updateSnapshot();
     }finally{onlineBusy=false;}
   });
   handleMain('opendeepl:importUpdate',async()=>{
-    assertUpdateIdle();const selected=await dialog.showOpenDialog(mainWindow,{title:'导入 OpenDeepL 签名更新包',properties:['openFile'],filters:[{name:'OpenDeepL Update',extensions:['odup']}]});
+    assertUpdateIdle();const selected=await dialog.showOpenDialog(mainWindow,{title:nativeText('importUpdate'),properties:['openFile'],filters:[{name:nativeText('updatePackage'),extensions:['odup']}]});
     if(selected.canceled||!selected.filePaths.length)return null;assertUpdateIdle();
     stagedUpdate=runtimeUpdates.importPackage(selected.filePaths[0]);return {version:stagedUpdate.version};
   });
@@ -401,6 +410,29 @@ function registerIPC() {
     if(updateSwitching){clearTimeout(updateTimer);if(runtimeUpdates.status().pending)runtimeUpdates.confirmHealthy();updateSwitching=false;}
     updateDraft=null;return true;
   });
+}
+function refreshNativeMenus(){
+  if(!tray)return;
+  tray.setToolTip(nativeText('trayTooltip'));
+  tray.setContextMenu(Menu.buildFromTemplate([
+    {label:nativeText('openApp'),click:trayShow},
+    {label:nativeText('clipboard'),click:()=>integrations.translateClipboard()},
+    {label:nativeText('screenshot'),click:()=>integrations.screenshot().then(value=>{if(value)mainWindow.webContents.send('opendeepl:externalText',value);}).catch(error=>{trayShow();mainWindow.webContents.send('opendeepl:externalText',{error:error.message});})},
+    {type:'separator'},
+    {label:nativeText('quit'),click:()=>{app.isQuitting=true;app.quit();}}
+  ]));
+}
+async function writeCaptureFrame(directory){
+  const png=(await mainWindow.webContents.capturePage()).toPNG();
+  const temp=path.join(directory,`current.${process.pid}.${crypto.randomUUID()}.tmp`);
+  try{await fs.writeFile(temp,png,{mode:0o600});await fs.rename(temp,path.join(directory,'current.png'));}
+  catch(error){await fs.rm(temp,{force:true}).catch(()=>{});throw error;}
+}
+function startAcceptanceCapture(){
+  if(!acceptanceCaptureDir)return;
+  let busy=false;
+  const capture=async()=>{if(busy||!mainWindow||mainWindow.isDestroyed())return;busy=true;try{await writeCaptureFrame(acceptanceCaptureDir);}catch{clearInterval(acceptanceCaptureTimer);acceptanceCaptureTimer=null;process.stderr.write('Acceptance capture failed.\n');app.exit(1);}finally{busy=false;}};
+  fs.mkdir(acceptanceCaptureDir,{recursive:true}).then(()=>{capture();acceptanceCaptureTimer=setInterval(capture,2000);}).catch(()=>{process.stderr.write('Acceptance capture failed.\n');app.exit(1);});
 }
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -422,20 +454,20 @@ function createWindow() {
   mainWindow.webContents.on('context-menu',(_event,params)=>{
     const text=params.selectionText;
     const items=[];
-    if(text?.trim()&&text.length<=MAX_TEXT)items.push({label:'用 OpenDeepL 翻译选中文字',click:()=>integrations.deliver({text,source:'context-menu'})},{type:'separator'});
+    if(text?.trim()&&text.length<=MAX_TEXT)items.push({label:nativeText('contextSelection'),click:()=>integrations.deliver({text,source:'context-menu'})},{type:'separator'});
     items.push({role:'copy',enabled:!!text},{role:'paste',enabled:!!params.isEditable},
-      {type:'separator'},{label:'翻译剪贴板文字',click:()=>integrations.translateClipboard()});
+      {type:'separator'},{label:nativeText('clipboard'),click:()=>integrations.translateClipboard()});
     Menu.buildFromTemplate(items).popup({window:mainWindow});
   });
   const page = path.join(runtimeRoots?.ui||path.join(ROOT,'ui'), 'index.html');
   const loading = mainWindow.loadFile(page);
-  mainWindow.webContents.once('did-finish-load',()=>{app.startupLoadMs=performance.now()-startupClock;});
+  mainWindow.webContents.once('did-finish-load',()=>{app.startupLoadMs=performance.now()-startupClock;if(acceptanceCaptureDir)acceptanceCaptureTimer=setTimeout(startAcceptanceCapture,2000);});
   if (visualTest) {
     loading.then(async () => {
       const directory = process.env.OPENDEEPL_VISUAL_DIR || path.join(ROOT, 'evidence', 'visual');
       await fs.mkdir(directory, { recursive: true });
       const captures = [];
-      await mainWindow.webContents.executeJavaScript(`(async()=>{const end=Date.now()+15000;while(Date.now()<end&&document.getElementById('engineState')?.textContent==='正在检查本地引擎')await new Promise(r=>setTimeout(r,100));})()`);
+      await mainWindow.webContents.executeJavaScript(`(async()=>{if(typeof startupReady!=='undefined')await startupReady;if(typeof refreshStatus==='function')await refreshStatus();})()`);
       for (const [width, height] of [[1180,760],[900,620]]) {
         mainWindow.setSize(width,height);
         for(const scenario of ['text','document','settings']){
@@ -466,17 +498,13 @@ function createWindow() {
           Promise.all([window.openDeepL.status(), window.openDeepL.glossary()]),
           new Promise((_, reject) => setTimeout(() => reject(new Error('bridge timeout')), 15000))
         ]);
-        const deadline = Date.now() + 15000;
-        while (Date.now() < deadline) {
-          const state = document.getElementById('engineState')?.textContent;
-          if (state && state !== '正在检查本地引擎') break;
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        if(typeof startupReady!=='undefined')await startupReady;
+        if(typeof refreshStatus==='function')await refreshStatus();
         return {present:true, status:checked[0], glossaryArray:Array.isArray(checked[1]),
-          renderedState:document.getElementById('engineState')?.textContent || ''};
+          renderedState:document.getElementById('engineState')?.textContent || '', appReady:typeof startupReady!=='undefined'};
       })()`);
       const scriptPresent = await fs.access(path.join(ROOT, 'ui', 'app.js')).then(() => true, () => false);
-      const uiReady = bridge.renderedState && bridge.renderedState !== '正在检查本地引擎';
+      const uiReady = bridge.appReady;
       const result = { loaded: !!(bridge.present && scriptPresent && bridge.glossaryArray && uiReady), bridge, scriptPresent, url: mainWindow.webContents.getURL(), version: app.getVersion(), loadMs:app.startupLoadMs, readyMs:performance.now()-startupClock };
       if (process.env.OPENDEEPL_SMOKE_REPORT) await fs.writeFile(process.env.OPENDEEPL_SMOKE_REPORT, JSON.stringify(result) + '\n');
       app.exit(result.loaded ? 0 : 1);
@@ -495,7 +523,7 @@ function receiveContextArguments(argv){
   const file=contextFileArgument(argv);if(file===undefined)return;
   if(!integrations){if(waitingContextArguments.length<8)waitingContextArguments.push(argv);return;}
   try{const text=consumeContextTextFile(file);integrations.deliver({text,source:'context-menu'});}
-  catch(error){integrations.deliver({error:'右键服务接收失败，请重新选择文字后重试。\n'+error.message});}
+  catch(error){integrations.deliver({error:nativeText('contextReceive')+error.message});}
 }
 app.on('second-instance',(_event,argv,_cwd,data)=>{if(mainWindow){mainWindow.show();mainWindow.focus();}receiveContextArguments(typeof data?.contextTextFile==='string'?['--context-text-file',data.contextTextFile]:argv);});
 app.on('activate',()=>{if(mainWindow){mainWindow.show();mainWindow.focus();}integrations?.returned();});
@@ -510,28 +538,30 @@ app.whenReady().then(async () => {
   runtimeUpdates=createRuntimeUpdateManager({bundleRoot:ROOT,userData:app.getPath('userData'),appVersion:app.getVersion()});
   runtimeRoots=runtimeUpdates.activeRoots();
   onlineChannel=createUpdateChannel({userData:app.getPath('userData'),publicKeyPath:path.join(__dirname,'update-public-key.pem'),appVersion:app.getVersion(),feedURL:updateConfig.feeds[process.platform],timeoutMs:30000});
+  interfaceLocale=createInterfaceLocale({directory:app.getPath('userData'),system:app.getLocale(),onChange:refreshNativeMenus});
+  await interfaceLocale.load();
   try{const prefs=JSON.parse(await fs.readFile(path.join(app.getPath('userData'),'update-preferences.json'),'utf8'));autoUpdateCheck=prefs.autoCheck!==false;}catch{}
   configureBundledRuntime();
   setupManager=createSetupManager({dataDir:dataDirectory(),runtimeDir:bundledRuntimeRoot(),templatePath:path.join(ROOT,'platform/templates/hunyuan-translation.jinja'),onProgress:progress=>{if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send('opendeepl:setupProgress',progress);}});
   setupInitialization=Promise.resolve(null);
   registerIPC();
   createWindow();
-  integrations=require('./integrations.cjs').createIntegrations({root:ROOT,python:pythonCommand,getWindow:()=>mainWindow,ocr:runOCR});
+  integrations=require('./integrations.cjs').createIntegrations({root:ROOT,python:pythonCommand,getWindow:()=>mainWindow,ocr:runOCR,getLocale:()=>interfaceLocale.get()});
   if(!testMode){
     // Update metadata is outside the renderer and off the critical startup path.
     onlineTimer=setTimeout(async()=>{if(!autoUpdateCheck||active.size)return;try{const result=await checkOnlineUpdate();if(result.online?.status==='available')mainWindow?.webContents.send('opendeepl:updateAvailable',{version:result.online.version});}catch{/* Offline use is unaffected. Manual check displays errors. */}},30000);
     await integrations.register();
-    tray=new Tray(nativeImage.createFromPath(path.join(ROOT,'assets/AppIcon.png')).resize({width:20,height:20}));tray.setToolTip('OpenDeepL · 本地翻译');
-    const show=()=>{if(mainWindow){mainWindow.show();mainWindow.focus();}};
-    tray.setContextMenu(Menu.buildFromTemplate([{label:'打开 OpenDeepL',click:show},{label:'翻译剪贴板文字',click:()=>integrations.translateClipboard()},{label:'框选截图翻译',click:()=>integrations.screenshot().then(value=>{if(value)mainWindow.webContents.send('opendeepl:externalText',value);}).catch(error=>{show();mainWindow.webContents.send('opendeepl:externalText',{error:error.message});})},{type:'separator'},{label:'退出',click:()=>{app.isQuitting=true;app.quit();}}]));
-    tray.on('click',show);
+    tray=new Tray(nativeImage.createFromPath(path.join(ROOT,'assets/AppIcon.png')).resize({width:20,height:20}));
+    trayShow=()=>{if(mainWindow){mainWindow.show();mainWindow.focus();}};
+    refreshNativeMenus();
+    tray.on('click',trayShow);
     mainWindow.on('close',event=>{if(!app.isQuitting){event.preventDefault();mainWindow.hide();}});
     receiveContextArguments(process.argv);
     for(const argv of waitingContextArguments.splice(0))receiveContextArguments(argv);
   }
 });
 app.on('before-quit',event=>{
-  app.isQuitting=true;setupManager?.cancelDownload();clearTimeout(updateTimer);clearTimeout(onlineTimer);
+  app.isQuitting=true;setupManager?.cancelDownload();clearTimeout(updateTimer);clearTimeout(onlineTimer);clearInterval(acceptanceCaptureTimer);
   if(!app.quittingCleaned){event.preventDefault();if(app.cleaningQuit)return;app.cleaningQuit=true;active.clear();const screenshots=integrations?.destroy();Promise.all([cores.stopAll(),screenshots]).finally(()=>{app.quittingCleaned=true;app.exit(0);});}
 });
 app.on('window-all-closed',()=>{if(testMode)app.quit();});

@@ -2,6 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const invoke = (name, ...args) => ipcRenderer.invoke('opendeepl:' + name, ...args);
 contextBridge.exposeInMainWorld('openDeepL', Object.freeze({
+  setInterfaceLocale:locale=>invoke('setInterfaceLocale',locale),
   setupStatus:()=>invoke('setupStatus'),setupInitialize:()=>invoke('setupInitialize'),
   setupDownload:mode=>invoke('setupDownload',mode),setupImport:mode=>invoke('setupImport',mode),setupCancel:()=>invoke('setupCancel'),modelLicense:mode=>invoke('modelLicense',mode),
   onSetupProgress:callback=>{if(typeof callback!=='function')throw new TypeError('Callback required.');const listener=(_event,value)=>callback(value);ipcRenderer.on('opendeepl:setupProgress',listener);return()=>ipcRenderer.removeListener('opendeepl:setupProgress',listener);},

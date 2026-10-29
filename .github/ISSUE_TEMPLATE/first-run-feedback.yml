@@ -1,5 +1,5 @@
 name: First-run feedback / 首次试用反馈
-description: Share a short 0.7.0 trial using synthetic text only / 仅用合成文本反馈 0.7.0 试用
+description: Share a short 0.7.1 trial using synthetic text only / 仅用合成文本反馈 0.7.1 试用
 title: "[First run] "
 body:
   - type: markdown
@@ -32,7 +32,7 @@ body:
     id: version
     attributes:
       label: App version / 应用版本
-      placeholder: "0.7.0"
+      placeholder: "0.7.1 (or the version actually tested)"
     validations:
       required: true
   - type: input
@@ -52,9 +52,20 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: interface_locale
+    attributes:
+      label: English / Simplified Chinese interface and persistence / 英文或简中界面与偏好保存
+      default: 1
+      options:
+        - Success / 成功
+        - Not tested / 未测试
+        - Problem / 有问题
+    validations:
+      required: true
+  - type: dropdown
     id: text
     attributes:
-      label: Synthetic text translation (amounts, negation, units) / 合成文本翻译
+      label: Synthetic text translation (places, conditions, negation) / 合成文本翻译
       default: 1
       options:
         - Success / 成功
@@ -100,4 +111,4 @@ body:
     attributes:
       label: What happened? / 具体情况
       description: Briefly describe problems or notable results using only synthetic content. No raw logs or private data. / 仅用合成内容简述问题或结果，不贴原始日志或私人数据。
-      placeholder: "Example: On Windows x64, one Ctrl+C copied normally; double-copy did not trigger after the permission prompt."
+      placeholder: "Example: On Windows x64, the chosen interface language persisted after restart; one Ctrl+C copied normally; double-copy did not trigger."
