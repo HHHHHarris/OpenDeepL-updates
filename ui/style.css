@@ -34,7 +34,7 @@
 .document-item-message{grid-column:1/-1;color:#f3adad;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .document-item .quiet-button{grid-column:2;margin:0;padding:5px 9px;font-size:11px}
 .document-actions{display:flex;flex-wrap:wrap;gap:9px}.document-actions .quiet-button{margin-top:12px}
-@media(max-width:800px){.document-workspace:has(.document-details:not([hidden])){display:block}.document-workspace:has(.document-details:not([hidden])) .document-intro{position:static;max-width:none;text-align:left;margin-bottom:20px}.document-workspace:has(.document-details:not([hidden])) .document-intro>svg{display:none}.document-workspace:has(.document-details:not([hidden])) .document-intro h1{margin:0 0 8px}.document-details{border-left:0;border-top:1px solid var(--line);padding:18px 0 0;max-width:none}.document-list{max-height:26vh}}
+@media(max-width:800px){.document-workspace:has(.document-details:not([hidden])){display:block}.document-workspace:has(.document-details:not([hidden])) .document-intro{position:static;max-width:none;text-align:left;margin-bottom:20px}.document-workspace:has(.document-details:not([hidden])) .document-intro>svg{display:none}.document-workspace:has(.document-details:not([hidden])) .document-intro h1{margin:0 0 8px}.document-details{border-left:0;border-top:1px solid var(--line);padding:18px 12px 0;max-width:none}.document-list{max-height:26vh}}
 
 /* Model choice belongs to the existing quiet footer, never a launcher. */
 .model-select select{max-width:138px;font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;color:var(--text);background:transparent}

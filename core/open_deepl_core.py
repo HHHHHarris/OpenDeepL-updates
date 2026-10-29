@@ -27,7 +27,7 @@ BASE_URL = 'http://127.0.0.1:18081'
 MODEL = 'hy-mt2-7b-q8_0'
 FAST_MODEL = 'hy-mt2-1.8b-q8_0'
 MODEL_ALIASES = {'quality': MODEL, 'fast': FAST_MODEL}
-DUAL_BASE_URL = 'http://127.0.0.1:18082'
+DUAL_BASE_URL = f"http://127.0.0.1:{int(os.environ.get('OPENDEEPL_ENGINE_PORT', '18082'))}"
 MAX_TEXT = 100_000
 MAX_SSE_BYTES = 2_000_000
 MAX_HISTORY = 200
@@ -389,6 +389,8 @@ class DualModelEngine(OfflineEngine):
 
 
 def default_data_dir() -> Path:
+    if os.environ.get('OPENDEEPL_DATA_DIR'):
+        return Path(os.environ['OPENDEEPL_DATA_DIR'])
     if sys.platform == 'darwin':
         return Path.home() / 'Library/Application Support/OpenDeepL'
     if os.name == 'nt':

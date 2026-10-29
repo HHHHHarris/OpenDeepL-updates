@@ -327,10 +327,11 @@ class DocumentTests(unittest.TestCase):
             with fitz.open(FIXTURES / 'sample.pdf') as pdf:
                 pdf[0].set_rotation(90)
                 pdf.save(src)
-            report = translate_document(src, translator=lambda req: '你好世界' if req.text == 'Hello world' else req.text)
-            with fitz.open(report['output']) as pdf:
-                self.assertEqual(pdf[0].rotation, 90)
-                self.assertIn('你好世界', pdf[0].get_text())
+            calls = []
+            with self.assertRaisesRegex(TranslationError, 'Rotated PDF text'):
+                translate_document(src, translator=lambda req: calls.append(req.text) or '你好世界')
+            self.assertEqual(calls, [])
+            self.assertFalse(src.with_name('rotated.translated.pdf').exists())
             scanned = Path(td) / 'scanned.pdf'
             with fitz.open() as pdf:
                 page = pdf.new_page()

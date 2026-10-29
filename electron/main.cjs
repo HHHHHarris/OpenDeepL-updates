@@ -1,5 +1,9 @@
 'use strict';
 const { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell, Tray, Menu, nativeImage } = require('electron');
+// Keep existing update/privacy preferences when changing the display name.
+const previousUserData=app.getPath('userData');
+app.setName('OpenDeepL');
+app.setPath('userData',previousUserData);
 const { spawn } = require('node:child_process');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
@@ -14,7 +18,9 @@ const {createUpdateChannel}=require('./update-channel.cjs');
 const updateConfig=require('./update-config.json');
 const {planBatch}=require('./document-batch.cjs');
 const cores=new CoreRegistry();
-const {readGlossary,modelStatus}=require('./local-state.cjs');
+const {readGlossary,modelStatus,dataDirectory,engineStatus}=require('./local-state.cjs');
+const {createSetupManager}=require('./setup-manager.cjs');
+let setupManager, setupInitialization;
 const startupClock=performance.now();
 
 const ROOT = app.getAppPath();
@@ -26,8 +32,12 @@ const documentInputs = new Map(), completedDocuments = new Map();
 let runtimeGeneration=crypto.randomUUID();
 let onlineChannel,onlineResult=null,onlineBusy=false,autoUpdateCheck=true,onlineTimer;
 let mainWindow, integrations, tray, runtimeUpdates, runtimeRoots, stagedUpdate, updateDraft=null, updateSwitching=false, updateTimer=null;
-const testMode = process.argv.some(arg=>['--visual-test','--smoke-test'].includes(arg));
+const testMode = process.argv.some(arg=>['--visual-test','--smoke-test','--acceptance-test'].includes(arg));
 const visualTest = process.argv.includes('--visual-test');
+if(process.argv.includes('--acceptance-test')){
+  const option=process.argv.find(arg=>arg.startsWith('--acceptance-root='));
+  if(option){const root=option.slice('--acceptance-root='.length);if(!path.isAbsolute(root))throw new Error('Acceptance root must be absolute');process.env.OPENDEEPL_DATA_DIR=path.join(root,'data');process.env.OPENDEEPL_TEST_DATA=path.join(root,'ui');process.env.OPENDEEPL_ENGINE_PORT='18084';}
+}
 if (testMode) app.setPath('userData', process.env.OPENDEEPL_TEST_DATA || path.join(os.tmpdir(), `OpenDeepL-test-${process.pid}`));
 
 app.commandLine.appendSwitch('disable-background-networking');
@@ -37,8 +47,26 @@ app.commandLine.appendSwitch('no-pings');
 app.commandLine.appendSwitch('disable-domain-reliability');
 app.commandLine.appendSwitch('disable-features', 'AutofillServerCommunication,MediaRouter');
 
+function bundledRuntimeRoot(){return process.env.OPENDEEPL_RUNTIME_DIR?path.resolve(process.env.OPENDEEPL_RUNTIME_DIR):path.join(process.resourcesPath,'runtime');}
+function configureBundledRuntime(){
+  const runtime=bundledRuntimeRoot();
+  if(!fsSync.existsSync(path.join(runtime,'python')))return;
+  process.env.OPENDEEPL_LLAMA_SERVER=path.join(runtime,'llama',process.platform==='win32'?'llama-server.exe':'llama-server');
+  process.env.OPENDEEPL_PDF_FONT=path.join(runtime,'fonts','NotoSansSC-Regular.ttf');
+  process.env.PYTHONNOUSERSITE='1';process.env.PYTHONDONTWRITEBYTECODE='1';
+}
+async function assertConfigured(mode='quality'){
+  if(!setupManager||(!app.isPackaged&&!process.env.OPENDEEPL_RUNTIME_DIR))return;
+  await setupInitialization;
+  const state=await setupManager.status();
+  if(!state.runtime.ready)throw new Error('请点击顶栏「模型」完成本地运行环境配置。');
+  const model=state.models[mode];
+  if(!model||!model.present||model.bytes!==model.requiredBytes)throw new Error('请点击顶栏「模型」下载或导入 '+(mode==='fast'?'1.8B':'7B')+' 模型。');
+}
 function pythonCommand() {
   if(process.env.OPENDEEPL_PYTHON)return path.resolve(process.env.OPENDEEPL_PYTHON);
+  const bundled=path.join(bundledRuntimeRoot(),'python',process.platform==='win32'?'python.exe':'bin/python3');
+  if(fsSync.existsSync(bundled))return bundled;
   const base=process.platform==='darwin'?path.join(os.homedir(),'Library/Application Support/OpenDeepL'):path.join(process.env.LOCALAPPDATA||os.homedir(),'OpenDeepL');
   const local=path.join(base,'python',process.platform==='win32'?'Scripts/python.exe':'bin/python3');
   if(fsSync.existsSync(local))return local;
@@ -184,7 +212,23 @@ async function switchUpdate(draft,rollback=false){
   }catch(error){if(switched)await recoverUpdate();else{updateSwitching=false;updateDraft=null;}throw error;}
 }
 function registerIPC() {
-  handleMain('opendeepl:translate', (_event, request) => {
+  handleMain('opendeepl:setupStatus',()=>setupManager.status());
+  handleMain('opendeepl:setupInitialize',async()=>{setupInitialization=setupManager.initialize();return setupInitialization;});
+  handleMain('opendeepl:setupDownload',async(_event,mode)=>{
+    if(!['quality','fast'].includes(mode))throw new Error('INVALID_MODE');
+    await setupInitialization;return setupManager.downloadModel(mode);
+  });
+  handleMain('opendeepl:setupImport',async(_event,mode)=>{
+    if(!['quality','fast'].includes(mode))throw new Error('INVALID_MODE');
+    const result=await dialog.showOpenDialog(mainWindow,{title:'选择已下载的模型',defaultPath:setupManager.paths().models,properties:['openFile'],filters:[{name:'GGUF model',extensions:['gguf']}]});
+    if(result.canceled||!result.filePaths.length)return null;
+    await setupInitialization;return setupManager.importModel(mode,result.filePaths[0]);
+  });
+  handleMain('opendeepl:setupCancel',()=>setupManager.cancelDownload());
+  handleMain('opendeepl:modelLicense',(_event,mode)=>{if(!['quality','fast'].includes(mode))throw new Error('INVALID_MODE');return shell.openExternal(setupManager.modelCatalog[mode].licenseUrl);});
+
+  handleMain('opendeepl:translate', async (_event, request) => {
+    await assertConfigured(request?.modelMode||'quality');
     if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
     const checked = validateRequest(request);
     const id = crypto.randomUUID();
@@ -203,6 +247,7 @@ function registerIPC() {
     if (child) { active.delete(id); await stopCore(child); report(id, { type: 'cancelled' }); return true; }
     return false;
   });
+  handleMain('opendeepl:engineStatus',(_event,mode='quality')=>engineStatus(mode));
   handleMain('opendeepl:status', (_event,mode='quality') => modelStatus(mode));
   handleMain('opendeepl:history', async () => (await coreOnce('history')).items);
   handleMain('opendeepl:removeHistory', async (_event, id) => { await coreOnce('removeHistory', { id: cleanString(id, 100) }, 'ok'); return true; });
@@ -287,6 +332,7 @@ function registerIPC() {
     return chosen.map(({token,file,extension,size})=>({token,name:path.basename(file),extension,size}));
   });
   handleMain('opendeepl:translateDocuments',async(_event,tokens,options)=>{
+    await assertConfigured('quality');
     if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
     if(!Array.isArray(tokens)||tokens.length<1||tokens.length>20||new Set(tokens).size!==tokens.length)throw new Error('每批请选择1至20份文档。');
     const inputs=tokens.map(token=>{const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error('文档选择已失效，请重新选择。');return input;});
@@ -311,6 +357,7 @@ function registerIPC() {
     },3600000);child.documentTemporary=temporary;active.set(id,child);return id;
   });
   handleMain('opendeepl:translateDocument',async(_event,token,options)=>{
+    await assertConfigured('quality');
     const input=documentInputs.get(cleanString(token,100));if(!input)throw new Error('请重新选择文档。');
     if(active.size||updateSwitching)throw new Error('请先完成或停止当前翻译。');
     const checked=validateRequest({text:'document',...options});delete checked.text;
@@ -464,6 +511,9 @@ app.whenReady().then(async () => {
   runtimeRoots=runtimeUpdates.activeRoots();
   onlineChannel=createUpdateChannel({userData:app.getPath('userData'),publicKeyPath:path.join(__dirname,'update-public-key.pem'),appVersion:app.getVersion(),feedURL:updateConfig.feeds[process.platform],timeoutMs:30000});
   try{const prefs=JSON.parse(await fs.readFile(path.join(app.getPath('userData'),'update-preferences.json'),'utf8'));autoUpdateCheck=prefs.autoCheck!==false;}catch{}
+  configureBundledRuntime();
+  setupManager=createSetupManager({dataDir:dataDirectory(),runtimeDir:bundledRuntimeRoot(),templatePath:path.join(ROOT,'platform/templates/hunyuan-translation.jinja'),onProgress:progress=>{if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send('opendeepl:setupProgress',progress);}});
+  setupInitialization=Promise.resolve(null);
   registerIPC();
   createWindow();
   integrations=require('./integrations.cjs').createIntegrations({root:ROOT,python:pythonCommand,getWindow:()=>mainWindow,ocr:runOCR});
@@ -481,7 +531,7 @@ app.whenReady().then(async () => {
   }
 });
 app.on('before-quit',event=>{
-  app.isQuitting=true;clearTimeout(updateTimer);clearTimeout(onlineTimer);
+  app.isQuitting=true;setupManager?.cancelDownload();clearTimeout(updateTimer);clearTimeout(onlineTimer);
   if(!app.quittingCleaned){event.preventDefault();if(app.cleaningQuit)return;app.cleaningQuit=true;active.clear();const screenshots=integrations?.destroy();Promise.all([cores.stopAll(),screenshots]).finally(()=>{app.quittingCleaned=true;app.exit(0);});}
 });
 app.on('window-all-closed',()=>{if(testMode)app.quit();});

@@ -13,7 +13,10 @@ patterns = [
     re.compile(rb'github_pat_[A-Za-z0-9_]{30,}'),
     re.compile(rb'(?:AKIA|ASIA)[A-Z0-9]{16}'),
 ]
-names = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode().split('\0')
+arguments = ['git', 'ls-files', '-z']
+if '--include-untracked' in sys.argv:
+    arguments += ['--cached', '--others', '--exclude-standard']
+names = sorted(set(subprocess.check_output(arguments, cwd=ROOT).decode().split('\0')))
 errors = []
 for name in filter(None, names):
     path = ROOT / name

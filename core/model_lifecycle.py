@@ -14,17 +14,38 @@ from pathlib import Path
 import sys
 import tempfile
 
-PORT = 18082
+PORT = int(os.environ.get('OPENDEEPL_ENGINE_PORT', '18082'))
+if not 1024 <= PORT <= 65535:
+    raise ValueError('Invalid local engine port')
 QUALITY_ALIAS = 'hy-mt2-7b-q8_0'
 FAST_ALIAS = 'hy-mt2-1.8b-q8_0'
 APP = (Path(os.environ.get('LOCALAPPDATA') or (Path.home() / 'AppData/Local')) / 'OpenDeepL'
        if sys.platform == 'win32' else Path.home() / 'Library/Application Support/OpenDeepL')
+APP = Path(os.environ.get('OPENDEEPL_DATA_DIR') or APP)
 RUNTIME = APP / 'runtime'
 PRESET = RUNTIME / 'dual-models.ini'
 OPERATION_LOCK = RUNTIME / 'model-operation.lock'
 CHECKSUM_RECEIPT = RUNTIME / 'model-checksums.json'
-QUALITY = Path(os.environ.get('OPENDEEPL_QUALITY_MODEL') or APP / 'models/HY-MT2-7B-Q8_0.gguf')
-FAST = Path(os.environ.get('OPENDEEPL_FAST_MODEL') or APP / 'models/Hy-MT2-1.8B-Q8_0.gguf')
+def configured_model(mode, filename):
+    override = os.environ.get('OPENDEEPL_' + mode.upper() + '_MODEL')
+    if override:
+        return Path(override)
+    try:
+        raw = (APP / 'model-references.json').read_text(encoding='utf-8')
+        if len(raw) > 8192:
+            raise ValueError('Oversized model references')
+        reference = json.loads(raw).get(mode)
+        if reference:
+            if not isinstance(reference, str) or not Path(reference).is_absolute():
+                raise ValueError('Invalid model reference')
+            return Path(reference)
+    except FileNotFoundError:
+        pass
+    return APP / 'models' / filename
+
+
+QUALITY = configured_model('quality', 'HY-MT2-7B-Q8_0.gguf')
+FAST = configured_model('fast', 'Hy-MT2-1.8B-Q8_0.gguf')
 TEMPLATE = Path(os.environ.get('OPENDEEPL_CHAT_TEMPLATE') or RUNTIME / 'hunyuan-translation.jinja')
 EXPECTED_SIZE = {'quality': 7981928896, 'fast': 1908528192}
 EXPECTED_SHA256 = {
@@ -93,6 +114,18 @@ def verify_weight(mode: str) -> None:
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+
+
+def preset_identity() -> str:
+    """Cheap change detection; complete weight hashes still gate each new router."""
+    values = []
+    for path in (QUALITY, FAST, TEMPLATE):
+        try:
+            stat = path.stat()
+            values.append((str(path.resolve()), stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns))
+        except FileNotFoundError:
+            values.append((str(path), None))
+    return hashlib.sha256(json.dumps(values).encode()).hexdigest()
 
 
 def write_preset() -> None:

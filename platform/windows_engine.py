@@ -16,7 +16,7 @@ import urllib.request
 
 sys.path.insert(0, os.environ.get('OPENDEEPL_CORE_ROOT') or str(Path(__file__).resolve().parents[1]))
 from core.model_lifecycle import (PORT, QUALITY_ALIAS, RUNTIME, PRESET, QUALITY,
-                                  TEMPLATE, write_preset)
+                                  TEMPLATE, write_preset, preset_identity)
 
 ALIAS = QUALITY_ALIAS
 ROOT = RUNTIME
@@ -115,7 +115,9 @@ def start() -> dict:
     if before["state"] == "unmanaged-listener":
         raise RuntimeError(f"Port {PORT} belongs to another process; preserved.")
     if before["state"] not in ("offline", "starting"):
-        return before
+        if (_record() or {}).get("configuration") == preset_identity():
+            return before
+        stop()
     if before["state"] == "starting":
         raise RuntimeError("Managed router is already starting.")
     for path in (BINARY, MODEL, TEMPLATE):
@@ -161,7 +163,7 @@ def start() -> dict:
         time.sleep(.1)
     if not proc:
         raise RuntimeError("Launched server process vanished; inspect server.log.")
-    PID_FILE.write_text(json.dumps({"pid": pid, "created": proc["created"]}), encoding="utf-8")
+    PID_FILE.write_text(json.dumps({"pid": pid, "created": proc["created"], "configuration": preset_identity()}), encoding="utf-8")
     for _ in range(600):
         if _process(pid) is None:
             PID_FILE.unlink(missing_ok=True)

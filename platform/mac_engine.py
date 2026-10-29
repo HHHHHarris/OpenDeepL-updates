@@ -14,7 +14,7 @@ import time
 import urllib.request
 
 sys.path.insert(0, os.environ.get('OPENDEEPL_CORE_ROOT') or str(Path(__file__).resolve().parents[1]))
-from core.model_lifecycle import PORT, PRESET, RUNTIME, write_preset
+from core.model_lifecycle import PORT, PRESET, RUNTIME, write_preset, preset_identity
 
 PID = RUNTIME / 'dual-server.pid.json'
 LOG = RUNTIME / 'dual-server.log'
@@ -81,7 +81,9 @@ def start():
     if before['state'] == 'unmanaged-listener':
         raise RuntimeError(f'Port {PORT} belongs to another process; preserved.')
     if before['state'] == 'ready':
-        return before
+        if (_record() or {}).get('configuration') == preset_identity():
+            return before
+        stop()
     if before['state'] == 'starting':
         raise RuntimeError('Own router is already starting.')
     with socket.socket() as sock:
@@ -102,7 +104,7 @@ def start():
         os.chmod(LOG, 0o600)
         proc = subprocess.Popen(args, cwd=RUNTIME, stdin=subprocess.DEVNULL,
                                 stdout=log, stderr=log, start_new_session=True)
-    PID.write_text(json.dumps({'pid': proc.pid}), encoding='utf-8')
+    PID.write_text(json.dumps({'pid': proc.pid, 'configuration': preset_identity()}), encoding='utf-8')
     os.chmod(PID, 0o600)
     for _ in range(600):
         if proc.poll() is not None:

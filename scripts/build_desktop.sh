@@ -78,6 +78,9 @@ trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 /usr/bin/ditto "$SOURCE" "$STAGE"
 APPROOT="$STAGE/Contents/Resources/app"
+RUNTIME="$ROOT/dist/runtime/macos-arm64"
+[ -x "$RUNTIME/python/bin/python3" ] && [ -x "$RUNTIME/llama/llama-server" ] || { echo "Missing prepared macOS runtime. Run scripts/prepare_runtime.py --target macos-arm64 first." >&2; exit 2; }
+/usr/bin/ditto "$RUNTIME" "$STAGE/Contents/Resources/runtime"
 mkdir -p "$APPROOT"
 # Electron's distributed license notices accompany the staged application.
 for NOTICE in LICENSE LICENSES.chromium.html; do
@@ -91,6 +94,7 @@ for item in core electron ui platform assets; do
   fi
 done
 cp "$ROOT/package.json" "$APPROOT/package.json"
+cp "$ROOT/LICENSE" "$ROOT/THIRD_PARTY_NOTICES.md" "$APPROOT/"
 mkdir -p "$STAGE/Contents/Helpers"
 /usr/bin/swiftc -O -framework AppKit -framework ApplicationServices "$ROOT/platform/DoubleCopyMac.swift" -o "$STAGE/Contents/Helpers/double-copy-macos"
 /usr/bin/swiftc -O -framework AppKit -framework Vision "$ROOT/platform/SelectionMac.swift" -o "$APPROOT/platform/selection-macos"

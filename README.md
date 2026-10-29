@@ -8,11 +8,21 @@
   <code>macOS + Windows</code>
   <code>Local inference</code>
 </p>
-<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="docs/INSTALL.md">Build & setup</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases">Releases</a> · <a href="docs/ROADMAP.md">Roadmap</a></p>
+<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="docs/INSTALL.md">Install & build</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 release</a> · <a href="docs/ROADMAP.md">Roadmap</a></p>
 
 OpenDeepL is an independent, open-source desktop translator for macOS and Windows. Text, screenshots, and supported documents are translated on your computer after you set up the model and local runtime. No translation API key is required. It is **not affiliated with DeepL SE**.
 
-> **Developer preview (source version 0.6.3):** This repository contains source and build scripts, not a one-click installer. The existing Release assets are signed `.odup` **runtime updates for compatible installed apps**, not standalone installers. Start with the [build and setup guide](docs/INSTALL.md). The published source has not yet been accepted as a clean-device, end-to-end install on both platforms.
+> **0.7.0 self-contained community release.** Apple Silicon Mac and Windows x64 packages bundle the local runtime; model weights are a separate first-run download or verified import. Mac builds use a fixed local signature, **not** Apple Developer ID or notarization; Windows builds are unsigned. See [installation and first-open notes](docs/INSTALL.md) and [release notes](docs/RELEASE-0.7.0.md). Existing `.odup` assets are compatible-app runtime updates, not standalone installers.
+
+### Download 0.7.0 (links activate after publication)
+
+[**Apple Silicon Mac · DMG**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) · [**Windows x64 · installer**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) · [**SHA-256 checksums**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt)
+
+## Quick start
+
+1. Download the package for your platform from the [v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0) once published, and compare its SHA-256 with the checksum file. On Mac, copy the App from the DMG; on Windows, run the installer. First-open security warnings are possible because the packages lack public publisher signing/notarization.
+2. Open OpenDeepL. The bundled runtime is checked automatically. Download the default 7B model, or choose an existing exact Q8 model file for SHA-256 verification; the optional 1.8B model provides fast mode.
+3. Translate text in the App. See [INSTALL.md](docs/INSTALL.md) for permissions, document limitations, first-open guidance, and 0.6.x upgrade notes.
 
 ## Why OpenDeepL?
 
@@ -26,7 +36,7 @@ OpenDeepL is an independent, open-source desktop translator for macOS and Window
 | --- | --- |
 | Text | Translate with Hy-MT2-7B Q8 by default; choose the optional Hy-MT2-1.8B Q8 fast mode, then retranslate with 7B. A glossary guides output but is not a guaranteed term lock. |
 | Capture | Select a screen region, run local OCR, and translate detected text. |
-| Documents | Translate DOCX, PPTX, and text-based PDFs, one file or a batch of 1–20. The document path uses 7B. PDFs are best-effort; scanned PDFs are not supported by document translation. |
+| Documents | Translate DOCX, PPTX, and supported text PDFs, one file or a batch of 1–20. The document path uses 7B. PDF support covers a conservative subset of common horizontal text; scans and complex layouts are rejected. |
 | Desktop access | Tray actions, clipboard translation, double-copy capture, and context-menu/selection fallbacks where the operating system permits. Ordinary copy behavior remains available. Integration behavior and permissions differ by platform. |
 | Local workspace | Review translation history and glossary entries stored on the device. History keeps up to 200 entries in local plaintext. |
 | Runtime | One model is loaded at a time. Model weights unload after 60 seconds of idle time. |
@@ -34,20 +44,20 @@ OpenDeepL is an independent, open-source desktop translator for macOS and Window
 
 Translation quality, OCR accuracy, fonts, and document layout vary. Review important output; document layout is not pixel-perfect. See [limitations and setup](docs/INSTALL.md).
 
-## Quick start from source
+## Build from source
 
-1. Read [INSTALL.md](docs/INSTALL.md) for prerequisites, model checksums, local Python dependencies, signing, and platform-specific builds.
+1. Read [INSTALL.md](docs/INSTALL.md) for package status, model checksums, first-run notes, and platform-specific builds.
 2. Clone this repository and run `npm ci` with Node.js 22.12+.
-3. Set up the exact model files, the matching llama.cpp runtime, and the private Python environment described in the guide.
-4. Run `npm start` for the developer shell or build a platform artifact. A source build does not include model weights or the Python dependencies.
+3. Prepare the pinned bundled runtime for your platform and obtain the exact model files described in the guide.
+4. Run `npm start` for the developer shell or build a platform artifact. The source checkout does not contain runtime binaries or model weights.
 
 ## Privacy at a glance
 
-Inference, OCR, document processing, glossary, and history are local after setup. The app does not send translation text or files to a cloud translation API. **Setup downloads** (dependencies/models) and the **optional GitHub update check** do use network access; the update request is for release metadata/packages, not document contents. See [PRIVACY.md](docs/PRIVACY.md) for storage and threat-model details.
+Inference, OCR, document processing, glossary, and history are local after setup. The app does not send translation text or files to a cloud translation API. **Model downloads** (dependencies are bundled in 0.7) and the **optional GitHub update check** do use network access; the update request is for release metadata/packages, not document contents. See [PRIVACY.md](docs/PRIVACY.md) for storage and threat-model details.
 
 ## Open source, with distinct licenses
 
-The original OpenDeepL code is MIT-licensed; see [LICENSE](LICENSE). Model weights, llama.cpp, Electron, Python packages, and other third-party components are governed by their own terms. In particular, optional PyMuPDF PDF support uses **AGPLv3 or a commercial license**, not MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and review the upstream licenses for anything you distribute.
+The original OpenDeepL code is MIT-licensed; see [LICENSE](LICENSE). Model weights, llama.cpp, Electron, Python packages, and other third-party components are governed by their own terms. The 0.7 runtime PDF stack uses pypdf, PDFium and ReportLab; their notices and the OFL font license are preserved separately. PyMuPDF is test-only, not bundled. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and review the upstream licenses for anything you distribute.
 
 ## Project
 

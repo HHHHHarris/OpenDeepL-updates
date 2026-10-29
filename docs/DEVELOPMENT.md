@@ -4,9 +4,9 @@ OpenDeepL combines an Electron UI (`electron/`, `ui/`), a Python translation/doc
 
 ## Versions and delivery layers
 
-- `package.json` identifies the **public source/native base as 0.6.3**. This source preview is released as `v0.6.3-source.1` as a GitHub prerelease, not as `latest` and not as a generic installer release.
+- `package.json` identifies the **unreleased self-contained candidate as 0.7.0**. The previously published source preview is `v0.6.3-source.1`, not a generic installer release. See [0.7.0 release notes](RELEASE-0.7.0.md) for the current publication boundary.
 - Existing installed native **0.6.0** apps can have signed **0.6.2 runtime** content applied. Those `.odup` packages alter compatible UI/Python runtime files; they do not ship a replacement Electron binary, native helpers, models, or Python packages.
-- A `0.6.3` source build is not the same base as a `0.6.0` installed app. Existing `0.6.2` runtime packages require base `0.6.0` and should not apply to it. Keep version compatibility explicit when changing the updater.
+- A `0.7.0` build is not the same base as a `0.6.0` installed app. Existing `0.6.2` runtime packages require base `0.6.0` and should not apply to it. Existing 0.6.x users need a full native 0.7 install once; 0.7 feed filenames are separate and the legacy feeds remain unchanged.
 - The repository URL retains its older `OpenDeepL-updates` slug because compatible clients already refer to that feed. Keep forks' feed and key configuration separate.
 
 ## Reproducible local loop
@@ -34,7 +34,7 @@ On Windows, use the equivalent `py -3.12 -m unittest ...` and PowerShell command
 
 ## Build and update discipline
 
-The macOS builder creates native helpers and a self-signed bundle; its identity is intentionally stored outside the repository. The Windows builder produces a portable ZIP. Neither script installs model weights or the private Python environment. Review the output before sharing; never commit a signing key, model file, user content, or generated bundle.
+The macOS builder creates native helpers and a fixed local-signature bundle; its identity is stored outside the repository. This is not Apple Developer ID signing or notarization. The Windows builder produces a portable ZIP, and `build_installer.ps1` can compile an unsigned Inno Setup installer. Both packages include the prepared Python, llama.cpp, PDF and OCR runtime, but no model weights. Review output and platform notices before sharing; never commit a signing key, model file, user content, or generated bundle.
 
 Update packaging uses pinned Ed25519 signatures, SHA-256 file checks, and base/platform compatibility. Treat a new update signing key or feed as a separate trust migration. Do not use the maintainer's feed as a distribution channel for a fork. `docs/PRIVACY.md` describes network and local storage boundaries.
 
@@ -43,7 +43,7 @@ Update packaging uses pinned Ed25519 signatures, SHA-256 file checks, and base/p
 - Behavior, user-visible limitations, and platform differences are documented.
 - Tests cover success, failure, and cancellation/retry where relevant.
 - Synthetic fixtures only; no real translated documents, screenshots, absolute personal paths, private logs, or proprietary assets enter the repository.
-- Third-party dependencies and assets are attributed under their own licenses, especially optional PyMuPDF PDF support.
+- Third-party dependencies and assets are attributed under their own licenses, including PDFium and bundled font notices.
 - Claims distinguish source availability, successful build, installed runtime, and verified end-to-end use.
 
 ### Automated source checks
@@ -59,5 +59,5 @@ manual review is still required.
 The signing/rollback integration test is opt-in: set
 `OPENDEEPL_SIGNING_TESTS=1` only on a prepared Mac with Electron, Swift and your
 own local signing identity. Default unit runs skip it. Jinja2 3.1.6 enables the
-formatting-template tests; document tests need the lxml/PyMuPDF versions recorded
+formatting-template tests; document tests need lxml, pypdf, pypdfium2 and ReportLab. PyMuPDF is a test-only inspector, with versions recorded
 in the provisioning scripts.

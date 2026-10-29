@@ -6,6 +6,7 @@ const path=require('node:path');
 const os=require('node:os');
 const ALIASES={quality:'hy-mt2-7b-q8_0',fast:'hy-mt2-1.8b-q8_0'};
 function dataDirectory(platform=process.platform,env=process.env,home=os.homedir()){
+  if(env.OPENDEEPL_DATA_DIR)return path.resolve(env.OPENDEEPL_DATA_DIR);
   return platform==='darwin'?path.join(home,'Library/Application Support/OpenDeepL'):
     platform==='win32'?path.join(env.LOCALAPPDATA||path.join(home,'AppData/Local'),'OpenDeepL'):
     path.join(env.XDG_DATA_HOME||path.join(home,'.local/share'),'OpenDeepL');
@@ -18,7 +19,7 @@ async function readGlossary(directory=dataDirectory()){
     return value;
   }catch(e){if(e.code==='ENOENT')return [];throw e;}
 }
-function probeModels({port=18082,timeout=500}={}){
+function probeModels({port=Number(process.env.OPENDEEPL_ENGINE_PORT||18082),timeout=500}={}){
   return new Promise(resolve=>{let settled=false;const done=v=>{if(!settled){settled=true;resolve(v);}};
     const req=http.get({host:'127.0.0.1',port,path:'/v1/models',agent:false},res=>{
       if(res.statusCode!==200){res.resume();done([]);return;}
@@ -33,4 +34,13 @@ async function modelStatus(mode='quality',options){
   const value=typeof item?.status==='object'?item.status.value:item?.status;
   return ['unloaded','sleeping','loading','loaded'].includes(value)?value:item?'available':'offline';
 }
-module.exports={ALIASES,dataDirectory,readGlossary,probeModels,modelStatus};
+async function engineStatus(mode='quality',options){
+  if(!Object.hasOwn(ALIASES,mode))throw new Error('Invalid model mode.');
+  const models=await probeModels(options);
+  const state=item=>typeof item?.status==='object'?item.status.value:item?.status;
+  const active=models.find(item=>Object.values(ALIASES).includes(item.id)&&['loaded','loading'].includes(state(item)));
+  const sleeping=models.find(item=>Object.values(ALIASES).includes(item.id)&&state(item)==='sleeping');
+  const current=active||sleeping||models.find(item=>item.id===ALIASES[mode]);
+  return {mode:current?Object.keys(ALIASES).find(key=>ALIASES[key]===current.id):mode,state:state(current)||'offline'};
+}
+module.exports={engineStatus,ALIASES,dataDirectory,readGlossary,probeModels,modelStatus};

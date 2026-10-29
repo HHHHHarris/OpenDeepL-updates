@@ -1,8 +1,6 @@
 """Offline document translation that keeps package parts and PDF page artwork intact.
 
-The caller is responsible for running this module under the private document Python
-runtime when translating PDF. No document bytes are sent anywhere except to the
-injected local translation engine.
+No document bytes are sent anywhere except to the injected local engine.
 """
 from __future__ import annotations
 
@@ -375,138 +373,9 @@ def _translate_ooxml(source, output, base, translator, report, progress):
     report['preservedParts'] = len(names) - len(changed)
 
 
-def _font_path():
-    candidates = [
-        Path('/System/Library/Fonts/STHeiti Medium.ttc'),
-        Path('/System/Library/Fonts/Hiragino Sans GB.ttc'),
-        Path('C:/Windows/Fonts/msyh.ttc'),
-        Path('C:/Windows/Fonts/simsun.ttc'),
-    ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    raise TranslationError('A local CJK font is required for PDF translation.')
-
-
 def _translate_pdf(source, output, base, translator, report, progress):
-    try:
-        import pymupdf as fitz
-    except ImportError as exc:
-        raise TranslationError('PyMuPDF is required in the private document runtime.') from exc
-    font_path = _font_path()
-    document = fitz.open(source)
-    try:
-        if document.is_encrypted:
-            raise TranslationError('Encrypted PDF is not supported.')
-        total = len(document)
-        report['pages'] = total
-        # Validate every page first. A scanned or rotated last page must not
-        # wake the model and then discard translations of earlier valid pages.
-        any_text = False
-        for page_number, page in enumerate(document, 1):
-            progress({'phase': 'validating', 'completed': page_number - 1,
-                      'total': total, 'part': f'page{page_number}'})
-            extractable = False
-            for block in page.get_text('dict')['blocks']:
-                if block.get('type') != 0:
-                    continue
-                for line in block.get('lines', []):
-                    if not any(span.get('text', '').strip() for span in line.get('spans', [])):
-                        continue
-                    extractable = any_text = True
-                    if tuple(round(x, 4) for x in line.get('dir', (1, 0))) != (1, 0):
-                        raise TranslationError(f'Rotated PDF text needs manual layout on page {page_number}.')
-            if not extractable and (page.get_images() or page.get_drawings()):
-                raise TranslationError(f'PDF page {page_number} has no extractable text layer.')
-        if not any_text:
-            raise TranslationError('PDF has no extractable text layer.')
-        document_text_spans = 0
-        for page_number, page in enumerate(document, 1):
-            progress({'phase': 'translating', 'completed': page_number - 1,
-                      'total': total, 'part': f'page{page_number}'})
-            lines = []
-            extractable = 0
-            # PyMuPDF extraction and insertion use unrotated coordinates even
-            # when page.rect swaps width/height for a 90/270-degree page.
-            unrotated_rect = fitz.Rect(0, 0, page.cropbox.width, page.cropbox.height)
-            for block in page.get_text('dict')['blocks']:
-                if block.get('type') != 0:
-                    continue
-                for line in block.get('lines', []):
-                    spans = [s for s in line.get('spans', []) if s.get('text', '').strip()]
-                    if not spans:
-                        continue
-                    extractable += len(spans)
-                    if tuple(round(x, 4) for x in line.get('dir', (1, 0))) != (1, 0):
-                        raise TranslationError(f'Rotated PDF text needs manual layout on page {page_number}.')
-                    for span in spans:
-                        text = span['text']
-                        rect = fitz.Rect(span['bbox']) & unrotated_rect
-                        if rect.is_empty or rect.width < 3 or rect.height < 3:
-                            continue
-                        location = f'page{page_number}:span{len(lines) + 1}'
-                        progress({'phase': 'translating', 'completed': page_number - 1,
-                                  'total': total, 'part': location})
-                        target = _translate(text, base, translator, report, location)
-                        if target != text:
-                            rgb = int(span.get('color', 0))
-                            color = ((rgb >> 16 & 255) / 255, (rgb >> 8 & 255) / 255, (rgb & 255) / 255)
-                            lines.append((rect, target, float(span['size']), color, location))
-            document_text_spans += extractable
-            if not extractable and (page.get_images() or page.get_drawings()):
-                raise TranslationError(f'PDF page {page_number} has no extractable text layer.')
-            links = [fitz.Rect(link['from']) * page.derotation_matrix for link in page.get_links()]
-            annotations = [fitz.Rect(annot.rect) for annot in (page.annots() or [])]
-            image_boxes = [fitz.Rect(item['bbox']) for item in page.get_image_info()]
-            for rect, _, _, _, location in lines:
-                if any(rect.intersects(box) for box in links + annotations + image_boxes):
-                    raise TranslationError(f'PDF text overlaps protected artwork or annotation at {location}.')
-            # Measure all replacements before mutating a page. Overflow aborts the whole output.
-            measured = []
-            for rect, target, original_size, color, location in lines:
-                initial = max(5.0, min(original_size, rect.height * .85))
-                fontsize = initial
-                fit = False
-                while fontsize >= 5.0:
-                    test = fitz.open()
-                    trial = test.new_page(width=unrotated_rect.width, height=unrotated_rect.height)
-                    remaining = trial.insert_textbox(rect, target, fontsize=fontsize,
-                                                     fontname='odcjk', fontfile=str(font_path),
-                                                     color=color, lineheight=1.0)
-                    test.close()
-                    if remaining >= 0:
-                        fit = True
-                        break
-                    fontsize -= .5
-                if not fit:
-                    report['overflow'].append({'location': location, 'box': list(rect), 'textLength': len(target)})
-                else:
-                    measured.append((rect, target, fontsize, color, location))
-            if report['overflow']:
-                raise TranslationError(f'PDF translated text overflow on page {page_number}.')
-            for rect, _, _, _, _ in measured:
-                page.add_redact_annot(rect, fill=False, cross_out=False)
-            if measured:
-                page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE,
-                                      graphics=fitz.PDF_REDACT_LINE_ART_NONE,
-                                      text=fitz.PDF_REDACT_TEXT_REMOVE)
-                for rect, target, fontsize, color, location in measured:
-                    remaining = page.insert_textbox(rect, target, fontsize=fontsize,
-                                                    fontname='odcjk', fontfile=str(font_path),
-                                                    color=color, lineheight=1.0)
-                    if remaining < 0:
-                        raise TranslationError(f'PDF insertion overflow at {location}.')
-                    report['translatedSegments'] += 1
-            progress({'phase': 'translating', 'completed': page_number, 'total': total, 'part': f'page{page_number}'})
-        if not document_text_spans:
-            raise TranslationError('PDF has no extractable text layer.')
-        progress({'phase': 'assembling', 'completed': total, 'total': total, 'part': 'output'})
-        # CJK insertion may otherwise embed the entire local font for each
-        # output, making even a short document tens of megabytes.
-        document.subset_fonts()
-        document.save(output, garbage=3, deflate=True)
-    finally:
-        document.close()
+    from .pdf_backend import translate_pdf
+    translate_pdf(source, output, base, translator, report, progress, _translate)
 
 
 def translate_document(input_path, output_path=None, request=None, on_progress=None,
@@ -565,18 +434,6 @@ def translate_document(input_path, output_path=None, request=None, on_progress=N
             # A corrupt OOXML archive can fail on open or on a later member CRC.
             # Keep this inside the document protocol's expected error boundary.
             raise TranslationError('Invalid or damaged document package.') from exc
-        except RuntimeError as exc:
-            # PyMuPDF reports unreadable PDFs using FileDataError (RuntimeError).
-            # Do not hide unrelated runtime failures from translators or progress.
-            if kind != '.pdf':
-                raise
-            try:
-                import pymupdf as fitz
-            except ImportError:
-                raise
-            if not isinstance(exc, fitz.FileDataError):
-                raise
-            raise TranslationError('Invalid or damaged PDF document.') from exc
         # Same-directory hard link publishes the finished file atomically and fails
         # if a competing process created the destination in the meantime.
         os.link(temporary, destination)
