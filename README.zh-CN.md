@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/AppIcon.svg" width="96" alt="OpenDeepL 图标"></p>
 <h1 align="center">OpenDeepL</h1>
 <p align="center"><strong>复制两次，本地翻译。让你的文字留在自己的设备上。</strong></p>
-<p align="center"><a href="README.md">English</a> · <a href="docs/INSTALL.md">安装与构建</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 版本</a> · <a href="docs/ROADMAP.md">路线图</a></p>
+<p align="center"><a href="README.md">English</a> · <a href="docs/INSTALL.md">安装与构建</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 版本</a> · <a href="docs/TRY.zh-CN.md">试用与反馈</a></p>
 
 OpenDeepL 是适用于 macOS 与 Windows 的独立开源桌面翻译应用。配置好模型和本地运行环境后，文本、截图和受支持文档都在本机处理，无需翻译 API Key。**本项目与 DeepL SE 没有关联。**
 
@@ -11,11 +11,25 @@ OpenDeepL 是适用于 macOS 与 Windows 的独立开源桌面翻译应用。配
 
 [**Apple Silicon Mac · DMG**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) · [**Windows x64 · 安装程序**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) · [**SHA-256 校验文件**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt)
 
+## 看真实 App
+
+![OpenDeepL 0.7 在 Mac 上用本地 7B 模型将虚构英文样本翻译成中文](assets/demo/translation-macos.jpg)
+
+*0.7.0 App 实际截图，使用虚构文本，并非设计效果图。当前界面主要为简体中文。[模型准备、空闲卸载及演示说明](docs/DEMO.md)。*
+
 ## 三步开始
 
 1. 在 [v0.7.0 发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)下载对应安装包，并按校验文件核对 SHA-256。Mac 从 DMG 复制 App，Windows 运行安装程序。由于缺少公开发行者签名或公证，首次打开可能出现系统提示。
 2. 打开 OpenDeepL，应用会检查自带运行环境。下载默认的 7B 模型，或选择已有的相同 Q8 模型文件进行 SHA-256 校验；1.8B 为可选快速模式。
 3. 在应用内翻译文字。[安装指南](docs/INSTALL.md)包含权限、文档限制、首次打开说明和 0.6.x 升级注意事项。
+
+## 邀请首批真实试用者
+
+希望先找到 **5 位独立试用者**，不以 Star 或好评为条件。用一段虚构文本试一试，告诉我们安装、模型准备、复制或翻译在哪一步遇到了问题；安装受阻同样是有价值的反馈。
+
+[**5 分钟试用清单**](docs/TRY.zh-CN.md) · [**提交首次试用反馈**](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml)
+
+约 5 分钟是**模型准备完成后的操作时间**，不含下载、校验和首次加载。Issue 是公开的，请仅用合成样本，不上传私人原文、文档或原始日志。
 
 ## 为什么选择 OpenDeepL？
 
@@ -35,7 +49,7 @@ OpenDeepL 是适用于 macOS 与 Windows 的独立开源桌面翻译应用。配
 | 模型运行 | 同时只加载一个模型，空闲 60 秒后卸载权重。 |
 | 更新 | 兼容的已安装 App 可检查维护者签名的运行时更新；启动约 30 秒后检查，可在设置中关闭。 |
 
-译文、OCR、字体和文档排版效果会随内容变化。重要用途应人工核对；文档排版不保证像素级一致。
+快速模式不代表与 7B 相同的质量：[真实演示](docs/DEMO.md)保留了一次否定含义误译及 7B 重译过程。译文、OCR、字体和文档排版效果会随内容变化。重要用途应人工核对；文档排版不保证像素级一致。
 
 ## 从源码构建
 

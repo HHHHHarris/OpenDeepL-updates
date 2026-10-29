@@ -4,7 +4,7 @@ OpenDeepL combines an Electron UI (`electron/`, `ui/`), a Python translation/doc
 
 ## Versions and delivery layers
 
-- `package.json` identifies the **unreleased self-contained candidate as 0.7.0**. The previously published source preview is `v0.6.3-source.1`, not a generic installer release. See [0.7.0 release notes](RELEASE-0.7.0.md) for the current publication boundary.
+- `package.json` identifies the **published self-contained community release as 0.7.0**. The older `v0.6.3-source.1` tag remains a historical source preview, not a standalone installer release. See [0.7.0 release notes](RELEASE-0.7.0.md) for the current publication boundary.
 - Existing installed native **0.6.0** apps can have signed **0.6.2 runtime** content applied. Those `.odup` packages alter compatible UI/Python runtime files; they do not ship a replacement Electron binary, native helpers, models, or Python packages.
 - A `0.7.0` build is not the same base as a `0.6.0` installed app. Existing `0.6.2` runtime packages require base `0.6.0` and should not apply to it. Existing 0.6.x users need a full native 0.7 install once; 0.7 feed filenames are separate and the legacy feeds remain unchanged.
 - The repository URL retains its older `OpenDeepL-updates` slug because compatible clients already refer to that feed. Keep forks' feed and key configuration separate.

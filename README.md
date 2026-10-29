@@ -8,7 +8,7 @@
   <code>macOS + Windows</code>
   <code>Local inference</code>
 </p>
-<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="docs/INSTALL.md">Install & build</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 release</a> · <a href="docs/ROADMAP.md">Roadmap</a></p>
+<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="docs/INSTALL.md">Install & build</a> · <a href="https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0">0.7.0 release</a> · <a href="docs/TRY.md">Try it & share feedback</a></p>
 
 OpenDeepL is an independent, open-source desktop translator for macOS and Windows. Text, screenshots, and supported documents are translated on your computer after you set up the model and local runtime. No translation API key is required. It is **not affiliated with DeepL SE**.
 
@@ -18,11 +18,25 @@ OpenDeepL is an independent, open-source desktop translator for macOS and Window
 
 [**Apple Silicon Mac · DMG**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) · [**Windows x64 · installer**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) · [**SHA-256 checksums**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt)
 
+## See the real app
+
+![OpenDeepL 0.7 translating a synthetic English sample into Chinese on macOS with the local 7B model](assets/demo/translation-macos.jpg)
+
+*Actual 0.7.0 App capture, using invented text—not a mockup. The current interface is primarily Simplified Chinese. [Model setup, idle unloading & demo details](docs/DEMO.md).*
+
 ## Quick start
 
 1. Download the package for your platform from the [v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0), and compare its SHA-256 with the checksum file. On Mac, copy the App from the DMG; on Windows, run the installer. First-open security warnings are possible because the packages lack public publisher signing/notarization.
 2. Open OpenDeepL. The bundled runtime is checked automatically. Download the default 7B model, or choose an existing exact Q8 model file for SHA-256 verification; the optional 1.8B model provides fast mode.
 3. Translate text in the App. See [INSTALL.md](docs/INSTALL.md) for permissions, document limitations, first-open guidance, and 0.6.x upgrade notes.
+
+## Help shape the first release
+
+Looking for the **first five independent testers**, not five-star reviews. Try one invented sentence and tell us where setup or translation gets in the way. A failed install is useful feedback too.
+
+[**5-minute trial**](docs/TRY.md) · [**Share first-run feedback**](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml)
+
+The checklist takes about five minutes **after model setup**; downloads and first model loading take extra time. Issues are public: use synthetic examples, not private text, documents, or raw logs.
 
 ## Why OpenDeepL?
 
@@ -42,7 +56,7 @@ OpenDeepL is an independent, open-source desktop translator for macOS and Window
 | Runtime | One model is loaded at a time. Model weights unload after 60 seconds of idle time. |
 | Updates | A compatible installed app can check a pinned maintainer feed for signed runtime updates. The startup check occurs after about 30 seconds and is optional in Settings. |
 
-Translation quality, OCR accuracy, fonts, and document layout vary. Review important output; document layout is not pixel-perfect. See [limitations and setup](docs/INSTALL.md).
+Fast mode is not quality-equivalent to 7B: the [real walkthrough](docs/DEMO.md) includes a missed negation and a 7B retranslation. Translation quality, OCR accuracy, fonts, and document layout vary. Review important output; document layout is not pixel-perfect. See [limitations and setup](docs/INSTALL.md).
 
 ## Build from source
 

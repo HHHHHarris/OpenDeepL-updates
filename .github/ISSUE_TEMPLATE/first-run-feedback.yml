@@ -1,0 +1,96 @@
+name: First-run feedback / 首次试用反馈
+description: Share a short 0.7.0 trial using synthetic text only / 仅用合成文本反馈 0.7.0 试用
+title: "[First run] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Follow the [English trial](https://github.com/HHHHHarris/OpenDeepL-updates/blob/main/docs/TRY.md) or [中文试用](https://github.com/HHHHHarris/OpenDeepL-updates/blob/main/docs/TRY.zh-CN.md). GitHub issues are public. Do not upload real source text, user documents, personal screenshots, secrets, or raw logs. For security concerns, use [SECURITY.md](https://github.com/HHHHHarris/OpenDeepL-updates/blob/main/SECURITY.md).
+  - type: dropdown
+    id: platform
+    attributes:
+      label: OS / 操作系统
+      options:
+        - macOS
+        - Windows
+        - Other / 其他
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Architecture / 架构
+      options:
+        - Apple Silicon (arm64)
+        - Windows x64
+        - Other or unsure / 其他或不确定
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version / 应用版本
+      placeholder: "0.7.0"
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: CPU and memory (optional) / CPU 与内存（可选）
+      placeholder: "e.g. M1 Max, 32 GB / Intel Core i7, 16 GB"
+  - type: dropdown
+    id: setup
+    attributes:
+      label: Installation and model setup / 安装与模型配置
+      options:
+        - Success / 成功
+        - Not tested / 未测试
+        - Problem or blocked / 有问题或受阻
+    validations:
+      required: true
+  - type: dropdown
+    id: text
+    attributes:
+      label: Synthetic text translation (amounts, negation, units) / 合成文本翻译
+      options:
+        - Success / 成功
+        - Not tested / 未测试
+        - Problem / 有问题
+    validations:
+      required: true
+  - type: dropdown
+    id: ordinary_copy
+    attributes:
+      label: Ordinary single copy / 普通单次复制
+      options:
+        - Success / 成功
+        - Not tested / 未测试
+        - Problem / 有问题
+    validations:
+      required: true
+  - type: dropdown
+    id: double_copy
+    attributes:
+      label: Optional double-copy / 可选双复制
+      options:
+        - Success / 成功
+        - Not tested / 未测试
+        - Problem or permission blocked / 有问题或权限受阻
+    validations:
+      required: true
+  - type: dropdown
+    id: idle
+    attributes:
+      label: 60-second idle unload (observed status only) / 60 秒空闲卸载（仅明确观察）
+      options:
+        - Success / 成功
+        - Not tested or not observable / 未测试或未观察到
+        - Problem / 有问题
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What happened? / 具体情况
+      description: Briefly describe problems or notable results using only synthetic content. No raw logs or private data. / 仅用合成内容简述问题或结果，不贴原始日志或私人数据。
+      placeholder: "Example: On Windows x64, one Ctrl+C copied normally; double-copy did not trigger after the permission prompt."
