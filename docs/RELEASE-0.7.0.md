@@ -31,3 +31,5 @@ As of 2026-10-29, a Mac DMG was verified, copied to an isolated install path, an
 | `OpenDeepL-0.7.0-windows-x64-setup.exe` | `67eed465c774615b981b453617a3a1c9c63c44f99003aa4b6eb67e59b32efd0e` |
 
 The separate `SHA256SUMS-0.7.0.txt` also covers new runtime packages and feeds. The original `SHA256SUMS.txt` is retained unchanged for the legacy 0.6.2 update assets.
+
+The GitHub-hosted sizes and SHA-256 digests of all 12 release assets matched the reviewed local files after publication. The source CI matrix passed on both macOS and Windows.

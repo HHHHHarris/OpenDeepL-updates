@@ -13,7 +13,7 @@ OpenDeepL 是适用于 macOS 与 Windows 的独立开源桌面翻译应用。配
 
 ## 三步开始
 
-1. 在 [v0.7.0 发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)上线后下载对应安装包，并按校验文件核对 SHA-256。Mac 从 DMG 复制 App，Windows 运行安装程序。由于缺少公开发行者签名或公证，首次打开可能出现系统提示。
+1. 在 [v0.7.0 发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)下载对应安装包，并按校验文件核对 SHA-256。Mac 从 DMG 复制 App，Windows 运行安装程序。由于缺少公开发行者签名或公证，首次打开可能出现系统提示。
 2. 打开 OpenDeepL，应用会检查自带运行环境。下载默认的 7B 模型，或选择已有的相同 Q8 模型文件进行 SHA-256 校验；1.8B 为可选快速模式。
 3. 在应用内翻译文字。[安装指南](docs/INSTALL.md)包含权限、文档限制、首次打开说明和 0.6.x 升级注意事项。
 

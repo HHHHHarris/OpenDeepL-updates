@@ -14,13 +14,13 @@ OpenDeepL is an independent, open-source desktop translator for macOS and Window
 
 > **0.7.0 self-contained community release.** Apple Silicon Mac and Windows x64 packages bundle the local runtime; model weights are a separate first-run download or verified import. Mac builds use a fixed local signature, **not** Apple Developer ID or notarization; Windows builds are unsigned. See [installation and first-open notes](docs/INSTALL.md) and [release notes](docs/RELEASE-0.7.0.md). Existing `.odup` assets are compatible-app runtime updates, not standalone installers.
 
-### Download 0.7.0 (links activate after publication)
+### Download 0.7.0
 
 [**Apple Silicon Mac · DMG**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) · [**Windows x64 · installer**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) · [**SHA-256 checksums**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt)
 
 ## Quick start
 
-1. Download the package for your platform from the [v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0) once published, and compare its SHA-256 with the checksum file. On Mac, copy the App from the DMG; on Windows, run the installer. First-open security warnings are possible because the packages lack public publisher signing/notarization.
+1. Download the package for your platform from the [v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0), and compare its SHA-256 with the checksum file. On Mac, copy the App from the DMG; on Windows, run the installer. First-open security warnings are possible because the packages lack public publisher signing/notarization.
 2. Open OpenDeepL. The bundled runtime is checked automatically. Download the default 7B model, or choose an existing exact Q8 model file for SHA-256 verification; the optional 1.8B model provides fast mode.
 3. Translate text in the App. See [INSTALL.md](docs/INSTALL.md) for permissions, document limitations, first-open guidance, and 0.6.x upgrade notes.
 

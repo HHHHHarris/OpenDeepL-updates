@@ -2,9 +2,9 @@
 
 ## Release status
 
-The self-contained **0.7.0 community release for macOS Apple Silicon and Windows x64**. Mac packages have a fixed local build signature, but no Apple Developer ID signature or notarization; Windows packages are unsigned. Physical-machine, isolated-data candidate checks have passed; the release hashes are listed below. See [0.7.0 release notes](RELEASE-0.7.0.md). Existing `.odup` assets update a compatible installed application; they are not standalone installers.
+**OpenDeepL 0.7.0** is a self-contained community release for macOS Apple Silicon and Windows x64. Mac packages have a fixed local build signature, but no Apple Developer ID signature or notarization; Windows packages are unsigned. Physical-machine, isolated-data candidate checks have passed; the release hashes are linked below. See [0.7.0 release notes](RELEASE-0.7.0.md). Existing `.odup` assets update a compatible installed application; they are not standalone installers.
 
-| Download (available after [v0.7.0 publication](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)) | File |
+| Download ([v0.7.0 release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.0)) | File |
 | --- | --- |
 | [Apple Silicon Mac DMG](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-macos-arm64.dmg) | `OpenDeepL-0.7.0-macos-arm64.dmg` |
 | [Windows x64 installer](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.0/OpenDeepL-0.7.0-windows-x64-setup.exe) | `OpenDeepL-0.7.0-windows-x64-setup.exe` |
