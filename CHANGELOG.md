@@ -1,13 +1,13 @@
 # Changelog
 
-Notable public-source changes are recorded here. Publication status is stated per entry; candidate verification does not imply GitHub assets are already uploaded.
+Notable public-source changes and release verification boundaries are recorded here.
 
-## 0.7.1 — 2026-10-30 · release candidate, not published
+## 0.7.1 — 2026-10-30 · English interface release
 
 - Added English and Simplified Chinese interface selection with a persisted preference; the full package also localizes app-owned native menus, dialogs and screenshot overlay text. OS-supplied controls may still follow the OS language.
 - Prepared a new, entirely fictional observatory and technical-instruction walkthrough with direct app captures. These are one-run demonstrations, not benchmarks or guarantees of translation accuracy.
 - Existing 0.7.0 installations can receive compatible web-UI language changes via runtime update; native menu/dialog language needs a full 0.7.1 package. 0.6.x users need a full-package migration. Older feeds remain available.
-- Local candidate validation: 132 Node tests (131 pass, one skip); full Mac and Windows packages built; real English-interface translation, language persistence, 7B/1.8B model cycle and idle state observed on both platforms. The 12 release assets and new checksum file are staged locally. This round did not re-accept all OCR, document or native-menu paths. GitHub upload and hosted-asset verification remain open; see [candidate notes](docs/RELEASE-0.7.1.md).
+- Release validation: 132 Node tests (131 pass, one skip); full Mac and Windows packages built; real English-interface translation, language persistence, 7B/1.8B model cycle and idle state observed on both platforms. Twelve release assets, including the new checksum file and five unchanged legacy assets, are published. This round did not re-accept all OCR, document or native-menu paths. GitHub asset SHA-256 values match the reviewed local files; see [release notes](docs/RELEASE-0.7.1.md).
 
 ## 0.7.0 — 2026-10-29 · self-contained community release
 

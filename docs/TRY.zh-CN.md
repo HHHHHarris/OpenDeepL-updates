@@ -1,6 +1,6 @@
 # 约五分钟试用 OpenDeepL
 
-这是**动手清单**，不是速度或翻译质量基准。首次模型下载、SHA-256 校验与首次加载另计。**0.7.1 尚处发布候选阶段**；完整包及校验文件出现之前，以[最新已发布版本](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)为准。已构建的安装包面向 Apple Silicon Mac 和 Windows x64。
+这是**动手清单**，不是速度或翻译质量基准。首次模型下载、SHA-256 校验与首次加载另计。[下载 0.7.1](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.1) 的 Apple Silicon Mac 或 Windows x64 安装包，并核对校验文件。
 
 1. **安装并选择界面语言。** 核对已公布安装包的摘要，打开完整 App，在设置中选择 **English** 或**简体中文**，重启后检查偏好是否保留。App 自有原生菜单与对话框的语言需要完整 0.7.1 包；系统提供的按钮可能仍跟随系统语言。安装包自带运行环境，默认 **7B Q8** 模型需另备（约 8 GB），可选快速 **1.8B Q8** 约 1.9 GB；可下载或校验导入完全相同的文件。Mac 未使用 Developer ID 签名/公证，Windows 未签名；首次打开可能出现提示或被设备策略阻止。详见[安装指南](INSTALL.md)。
 2. **翻译虚构导览。** 在 App 中选择**英语 → 法语**、7B，粘贴：`At the observatory's open evening, visitors can borrow a sky map. The telescope is on the roof, but the exhibition is on the ground floor. If clouds cover the sky, the talk will continue indoors. This is an invented visitor guide.` 检查屋顶与底层是否区分、阴天讲座是否仍在室内。记录实际结果，包括错误；措辞无需和某份参考译文完全一致。

@@ -2,9 +2,9 @@
 
 [English README](../README.md) · [中文介绍](../README.zh-CN.md) · [Try it](TRY.md) · [自己试用](TRY.zh-CN.md)
 
-**Release candidate.** These are direct app-content captures with an English interface and invented source text—not mockups, edited translations, speed benchmarks, or proof of every workflow. The Mac observatory and fast-mode captures and the Windows capture come from final packages. The Mac technical capture is from an earlier genuine 0.7.1 candidate run. Content captures omit OS-controlled prompts; app-owned screenshot overlays follow the selected language. GitHub publication remains pending.
+**OpenDeepL 0.7.1.** These are direct app-content captures with an English interface and invented source text—not mockups, edited translations, speed benchmarks, or proof of every workflow. The Mac observatory and fast-mode captures and the Windows capture come from final packages. The Mac technical capture is from an earlier genuine 0.7.1 candidate run. Content captures omit OS-controlled prompts; app-owned screenshot overlays follow the selected language. [Download the release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.1).
 
-**发布候选稿。** 以下是英文界面 App 的直接内容截图，原文完全虚构；不是效果图、修改过的译文、速度基准或全功能验收证明。Mac 天文台与快速模式图、Windows 图来自最终安装包；Mac 技术说明图来自较早的真实 0.7.1 候选构建。内容截图不包含操作系统控制的提示；App 自有截图覆盖层遵循所选语言。GitHub 正式发布尚待完成。
+**OpenDeepL 0.7.1。** 以下是英文界面 App 的直接内容截图，原文完全虚构；不是效果图、修改过的译文、速度基准或全功能验收证明。Mac 天文台与快速模式图、Windows 图来自最终安装包；Mac 技术说明图来自较早的真实 0.7.1 候选构建。内容截图不包含操作系统控制的提示；App 自有截图覆盖层遵循所选语言。[下载已发布版本](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.1)。
 
 ## 1. Choose a model / 准备模型
 
@@ -57,6 +57,6 @@ Fast mode uses the optional 1.8B model for an initial reading and offers **Retra
 
 ## Try it / 自己试用
 
-[English checklist](TRY.md) · [中文清单](TRY.zh-CN.md) · [Installation and first-open notes](INSTALL.md) · [0.7.1 candidate notes](RELEASE-0.7.1.md)
+[English checklist](TRY.md) · [中文清单](TRY.zh-CN.md) · [Installation and first-open notes](INSTALL.md) · [0.7.1 release notes](RELEASE-0.7.1.md)
 
 Text, OCR and supported document processing are local after setup. Model downloads and optional GitHub update checks use the network. The Mac package has no Developer ID/notarization and Windows is unsigned; device policy may block them. Review important output and keep public feedback synthetic.

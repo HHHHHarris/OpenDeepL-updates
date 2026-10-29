@@ -2,15 +2,15 @@
 
 ## Release status
 
-**0.7.1 is a release candidate, not yet published.** Full packages for Apple Silicon macOS and Windows x64 have been built and locally tested. Use the [latest published release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) until the new installers and checksums are uploaded. The Mac build has a fixed local signature, **not** Apple Developer ID signing or notarization; Windows is unsigned. See [0.7.1 candidate notes](RELEASE-0.7.1.md). Existing `.odup` assets are compatible-app runtime updates, not standalone installers.
+**0.7.1 is published.** Download the full package for Apple Silicon macOS or Windows x64 from the [release page](https://github.com/HHHHHarris/OpenDeepL-updates/releases/tag/v0.7.1). Both were built and exercised on actual machines. The Mac build has a fixed local signature, **not** Apple Developer ID signing or notarization; Windows is unsigned. See [0.7.1 release notes](RELEASE-0.7.1.md). `.odup` assets are compatible-app runtime updates, not standalone installers.
 
-| Planned 0.7.1 asset (not yet uploaded) | Local candidate filename |
+| Platform / verification | Download |
 | --- | --- |
-| Apple Silicon Mac DMG | `OpenDeepL-0.7.1-macos-arm64.dmg` |
-| Windows x64 installer | `OpenDeepL-0.7.1-windows-x64-setup.exe` |
-| SHA-256 checksums | `SHA256SUMS-0.7.1.txt` |
+| Apple Silicon Mac DMG | [OpenDeepL-0.7.1-macos-arm64.dmg](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-macos-arm64.dmg) |
+| Windows x64 installer | [OpenDeepL-0.7.1-windows-x64-setup.exe](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-windows-x64-setup.exe) |
+| SHA-256 checksums | [SHA256SUMS-0.7.1.txt](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/SHA256SUMS-0.7.1.txt) |
 
-**Once published:** download the full package and verify its published SHA-256; copy the Mac app from the DMG or run the Windows installer; then download or verify/import the default 7B model. The optional 1.8B model enables fast mode. The runtime is bundled but model weights are not. The 0.7.1 app lets you choose English or Simplified Chinese in Settings, and saves the preference. App-owned native menus and dialogs follow this choice; OS-provided buttons may use the OS language. Intel Mac, Windows ARM and Linux are not advertised as accepted package targets.
+**Install:** download the full package and verify its published SHA-256; copy the Mac app from the DMG or run the Windows installer; then download or verify/import the default 7B model. The optional 1.8B model enables fast mode. The runtime is bundled but model weights are not. The 0.7.1 app lets you choose English or Simplified Chinese in Settings, and saves the preference. App-owned native menus and dialogs follow this choice; OS-provided buttons may use the OS language. Intel Mac, Windows ARM and Linux are not advertised as accepted package targets.
 
 ### First-open notices
 

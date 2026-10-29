@@ -5,11 +5,11 @@
 
 OpenDeepL 是面向 **Apple Silicon Mac 和 Windows x64** 的独立开源桌面翻译应用。文本、框选截图和受支持文档使用本地模型处理，无需翻译 API Key。**本项目与 DeepL SE 无关联。**
 
-> **0.7.1 发布候选稿，尚未发布。** v0.7.1 安装包及校验文件上传之前，请从[最新已发布版本](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)获取下载；下列 0.7.1 文件名仅供识别。验收边界见[候选版本说明](docs/RELEASE-0.7.1.md)。
+> **0.7.1 已发布。** 支持英文／简体中文界面，提供 Mac 与 Windows 完整安装包。[版本说明](docs/RELEASE-0.7.1.md)列出真机验证范围和限制。
 
 ### 下载
 
-[**最新已发布版本**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) · 计划中的 0.7.1 文件：`OpenDeepL-0.7.1-macos-arm64.dmg`、`OpenDeepL-0.7.1-windows-x64-setup.exe`、`SHA256SUMS-0.7.1.txt`。
+[**下载 Mac 版**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-macos-arm64.dmg) · [**下载 Windows 版**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-windows-x64-setup.exe) · [SHA-256 校验](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/SHA256SUMS-0.7.1.txt)
 
 ## 真实 App，虚构导览
 
@@ -29,7 +29,7 @@ OpenDeepL 是面向 **Apple Silicon Mac 和 Windows x64** 的独立开源桌面�
 
 ## 开始使用
 
-1. 待 v0.7.1 正式发布后，从[最新发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)下载完整安装包并核对公开的 SHA-256。运行环境随包提供；模型权重不包含在内。默认 7B 首次下载约 **8 GB**，可选 1.8B 约 **1.9 GB**；也可校验导入完全相同的已有 Q8 文件。
+1. 从[最新发布页](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest)下载完整安装包并核对公开的 SHA-256。运行环境随包提供；模型权重不包含在内。默认 7B 首次下载约 **8 GB**，可选 1.8B 约 **1.9 GB**；也可校验导入完全相同的已有 Q8 文件。
 2. 打开 App 完成模型准备。Mac 是固定**本地**签名，不是 Apple Developer ID 签名或公证；Windows 未签名。首次打开可能有系统提示或受到设备策略阻止。详见[安装说明](docs/INSTALL.md#first-open-notices)。
 3. 用[简短合成文本清单](docs/TRY.zh-CN.md)试用，并[提交首次反馈](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml)。约五分钟指**模型准备之后**的操作时间；下载和首次加载另计。公开 Issue 请只用虚构示例，不贴私人文档或原始日志。
 

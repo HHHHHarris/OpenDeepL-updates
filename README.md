@@ -5,11 +5,11 @@
 
 OpenDeepL is an independent, open-source desktop translator for **Apple Silicon macOS and Windows x64**. Translate text, selected screen regions, and supported documents with local models. No translation API key is needed. OpenDeepL is **not affiliated with DeepL SE**.
 
-> **0.7.1 release candidate — not yet published.** Use the [latest published release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) until the v0.7.1 files and checksums are uploaded. The 0.7.1 package names below are for identification, not live download links yet. See [candidate notes](docs/RELEASE-0.7.1.md) for verification status.
+> **0.7.1 is available.** English and Simplified Chinese UI, with self-contained packages for Mac and Windows. [Release notes](docs/RELEASE-0.7.1.md) document the real-machine checks and limits.
 
 ### Download
 
-[**Latest published release**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) · Planned 0.7.1 files: `OpenDeepL-0.7.1-macos-arm64.dmg`, `OpenDeepL-0.7.1-windows-x64-setup.exe`, `SHA256SUMS-0.7.1.txt`.
+[**Download for Mac**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-macos-arm64.dmg) · [**Download for Windows**](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/OpenDeepL-0.7.1-windows-x64-setup.exe) · [SHA-256 checksums](https://github.com/HHHHHarris/OpenDeepL-updates/releases/download/v0.7.1/SHA256SUMS-0.7.1.txt)
 
 ## A real app, a fictional guide
 
@@ -29,7 +29,7 @@ OpenDeepL is an independent, open-source desktop translator for **Apple Silicon 
 
 ## Get started
 
-1. Once v0.7.1 is published, download the full package from the [latest release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) for your platform and verify its published SHA-256. The runtime is bundled; model weights are not. A first-time 7B download is about **8 GB**; optional 1.8B is about **1.9 GB**. You may instead verify/import the exact existing Q8 file.
+1. Download the full package from the [latest release](https://github.com/HHHHHarris/OpenDeepL-updates/releases/latest) for your platform and verify its published SHA-256. The runtime is bundled; model weights are not. A first-time 7B download is about **8 GB**; optional 1.8B is about **1.9 GB**. You may instead verify/import the exact existing Q8 file.
 2. Open the app and complete model setup. Mac uses a fixed **local** signature, not Apple Developer ID signing or notarization; Windows is unsigned. First-open warnings or device-policy blocks are possible. [Read first-open guidance](docs/INSTALL.md#first-open-notices).
 3. Try the [short synthetic-text checklist](docs/TRY.md) and share [first-run feedback](https://github.com/HHHHHarris/OpenDeepL-updates/issues/new?template=first-run-feedback.yml). The checklist takes about five minutes **after** model setup; downloads and initial loading take extra time. Public issues should contain only invented examples, not private documents or raw logs.
 
